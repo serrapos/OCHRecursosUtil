@@ -1,0 +1,9 @@
+/target
+/.classpath
+/.project
+/CreateJar.jardesc
+/createTomcatJar.jardesc
+/JbossJar.jardesc
+/.settings
+/bin
+/target

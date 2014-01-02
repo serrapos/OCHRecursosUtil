@@ -1,0 +1,94 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.opencmshispano</groupId>
+  <artifactId>recursosutil</artifactId>
+  <version>1.0</version>
+  <name>Recursos Util Module</name>
+  <dependencies>
+  	<dependency>
+		<groupId>junit</groupId>
+		<artifactId>junit</artifactId>
+		<version>3.8.1</version>
+		<scope>test</scope>
+    </dependency>
+    
+    <!-- Log -->
+    <dependency>
+		<groupId>log4j</groupId>
+		<artifactId>log4j</artifactId>
+		<version>1.2.17</version>
+	</dependency>
+	
+	
+	<!-- OpenCms -->
+	<dependency>
+		<groupId>org.opencms</groupId>
+		<artifactId>opencms-core</artifactId>
+		<version>8.5.2</version>
+	</dependency>
+	
+	<!-- Apache Commons -->
+	<dependency>
+    	<groupId>commons-logging</groupId>
+    	<artifactId>commons-logging</artifactId>
+    	<version>1.0.4</version>
+    	<scope>compile</scope>
+    	<optional>false</optional>
+    </dependency>
+    <dependency>
+    	<groupId>org.apache.commons</groupId>
+    	<artifactId>commons-email</artifactId>
+    	<version>1.2</version>
+    	<scope>compile</scope>
+    	<optional>false</optional>
+    </dependency>
+    <dependency>
+	  <groupId>commons-lang</groupId>
+	  <artifactId>commons-lang</artifactId>
+	  <version>2.4</version>
+	  <scope>compile</scope>
+	</dependency>
+	<dependency>
+	  <groupId>commons-validator</groupId>
+	  <artifactId>commons-validator</artifactId>
+	  <version>1.3.1</version>
+	</dependency>
+	
+	<!-- Standar java -->
+	<dependency>
+    	<groupId>javax.servlet</groupId>
+    	<artifactId>servlet-api</artifactId>
+    	<version>2.5</version>
+    	<scope>compile</scope>
+    	<optional>false</optional>
+    </dependency>
+    <dependency>
+    	<groupId>javax.servlet</groupId>
+    	<artifactId>jsp-api</artifactId>
+    	<version>2.0</version>
+    	<optional>false</optional>
+    </dependency>
+    <dependency>
+	    <groupId>dom4j</groupId>
+	    <artifactId>dom4j</artifactId>
+	    <version>1.6.1</version>
+	</dependency>
+	<dependency>
+		<groupId>jaxen</groupId>
+		<artifactId>jaxen</artifactId>
+		<version>1.1.1</version>
+	</dependency>
+	
+  </dependencies>
+  <build>
+	<plugins>
+		<plugin>
+			<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+	</plugins>
+   </build>
+</project>
