@@ -17,6 +17,7 @@ import org.dom4j.Element;
 import org.opencms.file.CmsFile;
 import org.opencms.file.CmsObject;
 import org.opencms.file.CmsProject;
+import org.opencms.file.CmsProperty;
 import org.opencms.file.CmsResource;
 import org.opencms.i18n.CmsEncoder;
 import org.opencms.jsp.CmsJspActionElement;
@@ -74,6 +75,94 @@ public class ResourceManager
 			{
 				this.cms = cms;
 				this.cmsObject = cmsObjectAdmin;
+			}
+			
+			/**
+			 * Sube una imagen a OpenCms a la carpeta indicada
+			 * @param image
+			 * @param title
+			 * @param vfsPath
+			 * @param publish
+			 * @return
+			 */
+			public boolean uploadImage(byte[] image, String title, String vfsPath, boolean publish)
+			{
+				boolean res = false;
+				try{
+					//Comprobamos primero si existe ya un fichero igual, si no existe lo creamos y si existe lo sobre escribimos
+					if(!cmsObject.existsResource(vfsPath))
+					{
+						//Creamos el recurso
+						int typeId = OpenCms.getResourceManager().getResourceType("image").getTypeId();
+						List<CmsProperty> propiedades = new ArrayList<CmsProperty>();
+						propiedades.add(new CmsProperty("Title",title,title));
+						cmsObject.createResource(vfsPath, typeId, image, propiedades);
+					}else{
+						//Si existe, leemos el recurso y lo modificamos
+						CmsFile r = cmsObject.readFile(vfsPath);
+						r.setContents(image);
+						cmsObject.writeFile(r);
+					}
+					
+					//Si hay que publicar, lo publicamos
+					if(publish)
+					{
+						cmsObject.unlockResource(vfsPath);
+						OpenCms.getPublishManager().publishResource(cmsObject, vfsPath);
+					}
+					res = true;
+				}catch(CmsException ex)
+				{
+					ex.printStackTrace();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				
+				return res;
+			}
+			
+			/**
+			 * Sube una imagen a OpenCms a la carpeta indicada
+			 * @param image
+			 * @param title
+			 * @param vfsPath
+			 * @param publish
+			 * @return
+			 */
+			public boolean uploadBinary(byte[] image, String title, String vfsPath, boolean publish)
+			{
+				boolean res = false;
+				try{
+					//Comprobamos primero si existe ya un fichero igual, si no existe lo creamos y si existe lo sobre escribimos
+					if(!cmsObject.existsResource(vfsPath))
+					{
+						//Creamos el recurso
+						int typeId = OpenCms.getResourceManager().getResourceType("binary").getTypeId();
+						List<CmsProperty> propiedades = new ArrayList<CmsProperty>();
+						propiedades.add(new CmsProperty("Title",title,title));
+						cmsObject.createResource(vfsPath, typeId, image, propiedades);
+					}else{
+						//Si existe, leemos el recurso y lo modificamos
+						CmsFile r = cmsObject.readFile(vfsPath);
+						r.setContents(image);
+						cmsObject.writeFile(r);
+					}
+					
+					//Si hay que publicar, lo publicamos
+					if(publish)
+					{
+						cmsObject.unlockResource(vfsPath);
+						OpenCms.getPublishManager().publishResource(cmsObject, vfsPath);
+					}
+					res = true;
+				}catch(CmsException ex)
+				{
+					ex.printStackTrace();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				
+				return res;
 			}
 
 			/**
