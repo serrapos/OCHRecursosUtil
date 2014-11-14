@@ -429,6 +429,7 @@ public class ResourceManager
 				          }
 		              }
 
+		              
 		              cmsResource = createOrEditResource(resource, type, content, publish);
 		              if(cmsResource == null)
 		            	  success = false;
@@ -689,37 +690,58 @@ public class ResourceManager
 					  }
 
 					  /* Prepare the xml conent */
-		              byte[] byteContent= content.marshal();
+					  byte[] byteContent= content.marshal();
 
 		              if(exists) //The resource exists
 		              {
-		            	/*Read the resource, and modify it*/
-		                CmsFile cmsFile = cmsObject.readFile(resource);
-		                cmsObject.lockResource(resource);
-		                cmsFile.setContents(byteContent);
-		                cmsObject.writeFile(cmsFile);
-		                cmsObject.unlockResource(resource);
-		                  /*
-			               * CmsObject.publishResource it's deprecated for OpenCms 7 use this instead
-			               * OpenCms.getPublishManager().publishResource(cmsObject, resource);
-			               */
-			            //cmsObject.publishResource(resource);
-		                if(publish)
-		                	OpenCms.getPublishManager().publishResource(cmsObject, resource);
-		                cmsResource = cmsFile;
+			            	//Bloqueamos el recurso
+			            	cmsObject.lockResource(resource);
+			            	
+			            	/*Leemos el recurso a modificar*/
+			                CmsFile cmsFile = cmsObject.readFile(resource);
+	
+			                //Modificamos el contenido
+			                cmsFile.setContents(byteContent);
+			                cmsObject.writeFile(cmsFile);
+			                
+			                /*Ejecutamos mappings y otras acciones necesarias despues de crear el recurso, para ello lo volvemos a leer*/
+				            cmsFile = cmsObject.readFile(resource);
+				            content = CmsXmlContentFactory.unmarshal(cmsObject, cmsFile);
+			                
+			                // Comprueba que el xml este bien formado, escribe los mapeos y asigna las categorías de los campos tipo OpenCmsCategory
+			                cmsFile = content.getHandler().prepareForWrite(cmsObject, content, cmsFile);
+			                
+			                //Desbloqueamos
+			                cmsObject.unlockResource(resource);
+		                    /*
+			                 * CmsObject.publishResource it's deprecated for OpenCms 7 use this instead
+			                 * OpenCms.getPublishManager().publishResource(cmsObject, resource);
+			                 */
+			                //cmsObject.publishResource(resource);
+			                //Publicamos el recurso
+			                if(publish)
+			                	OpenCms.getPublishManager().publishResource(cmsObject, resource);
+		                
+			                cmsResource = cmsFile;
 		              }
 		              else //The resource does not exist
 		              {
-		            	 /*Create the resource and set the content*/
-		            	 cmsResource = cmsObject.createResource(resource, type, byteContent, new ArrayList());
-		                 cmsObject.unlockResource(resource);
-			              /*
-			               * CmsObject.publishResource it's deprecated for OpenCms 7 use this instead
-			               * OpenCms.getPublishManager().publishResource(cmsObject, resource);
-			               */
-			             //cmsObject.publishResource(resource);
-		                 if(publish)
-		                	 OpenCms.getPublishManager().publishResource(cmsObject, resource);
+			            	 /*Create the resource and set the content*/
+			            	 cmsResource = cmsObject.createResource(resource, type, byteContent, new ArrayList());
+			            	 
+			            	 /*Ejecutamos mappings y otras acciones necesarias despues de crear el recurso, para ello lo volvemos a leer*/
+				             CmsFile cmsFile = cmsObject.readFile(resource);
+				             content = CmsXmlContentFactory.unmarshal(cmsObject, cmsFile);
+				             
+				             cmsFile = content.getHandler().prepareForWrite(cmsObject, content, cmsFile);
+			                 cmsObject.unlockResource(resource);
+				              /*
+				               * CmsObject.publishResource it's deprecated for OpenCms 7 use this instead
+				               * OpenCms.getPublishManager().publishResource(cmsObject, resource);
+				               */
+				             //cmsObject.publishResource(resource);
+			                 if(publish)
+			                	 OpenCms.getPublishManager().publishResource(cmsObject, resource);
 		              }
 		              if(change)
 		              {

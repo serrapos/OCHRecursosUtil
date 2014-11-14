@@ -1,0 +1,11 @@
+apply plugin: 'java'
+jar.archiveName = "recursosutil-1.1.jar"
+version = '1.1'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	compile group: 'org.opencms', name: 'opencms-core', version: '9.0.1'
+}
