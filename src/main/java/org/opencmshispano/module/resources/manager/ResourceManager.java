@@ -368,7 +368,21 @@ public class ResourceManager
 			 */
 			public boolean saveResource (HashMap data, String resource, int type, boolean publish)
 			{
-				if(saveCmsResource (data, resource, type, publish) == null)
+				if(saveCmsResource (data, resource, type, publish, null) == null)
+					return false;
+				else
+					return true;
+			}
+			
+			/**
+			 * This method creates a new resource or edits an existing one, and sets it's content according to the info passed by the HashMap data.
+			 * @param data - Data associated to the resource's content
+			 * @param resource - Resources path+name
+			 * @param type - The resource's type
+			 */
+			public boolean saveResource (HashMap data, String resource, int type, boolean publish, String customLocale)
+			{
+				if(saveCmsResource (data, resource, type, publish, customLocale) == null)
 					return false;
 				else
 					return true;
@@ -380,7 +394,7 @@ public class ResourceManager
 			 * @param resource - Resources path+name
 			 * @param type - The resource's type
 			 */
-			public CmsResource saveCmsResource (HashMap data, String resource, int type, boolean publish)
+			public CmsResource saveCmsResource (HashMap data, String resource, int type, boolean publish, String customLocale)
 			{
 				boolean success=true;
 				CmsResource cmsResource=null;
@@ -391,11 +405,14 @@ public class ResourceManager
 					  String schema = Schemas.getSchemaByType(type);					  
 		              /*Create the XmlContent associated to the new resource to access and manage the structured content */
 
+					  /*Get the locale*/
+					  Locale localizacion = cmsObject.getRequestContext().getLocale();
+					  if(customLocale!=null)
+						  localizacion = new Locale(customLocale);
+					  
 					  CmsXmlContentDefinition def = CmsXmlContentDefinition.unmarshal(schema,new CmsXmlEntityResolver(cmsObject));
-		              CmsXmlContent content = CmsXmlContentFactory.createDocument(cmsObject, cmsObject.getRequestContext().getLocale(), CmsEncoder.ENCODING_UTF_8,def);
+		              CmsXmlContent content = CmsXmlContentFactory.createDocument(cmsObject, localizacion, CmsEncoder.ENCODING_UTF_8,def);
 
-		              /*Get the locale*/
-		              Locale localizacion = cmsObject.getRequestContext().getLocale();
 
 		              /*Go through the MAP's list with all the data.*/
 		              Set keys = data.keySet();
