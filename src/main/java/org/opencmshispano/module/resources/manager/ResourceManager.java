@@ -675,6 +675,96 @@ public class ResourceManager
 		          }
 		          return success;
 			}
+			
+			
+			public boolean addCategory(String resource, String category, String fieldCategory, String localeStr, Boolean publish) throws Exception{
+				CmsResource cmsResource=null;
+				boolean success=true;
+				boolean change = false;
+
+				//Chequeamos que los campos son correctos
+				if(fieldCategory!=null && category!=null){
+					
+				  /*
+				   * Get the current project and check if the current project is the online project, if it is change to the offline project
+				   * since one can only create resources on the offline project.
+				   */
+				  CmsProject project = cmsObject.getRequestContext().getCurrentProject();
+				  if(project.getName().equals("Online"))
+				  {
+					  cmsObject.getRequestContext().setCurrentProject(cmsObject.readProject("Offline"));
+					  change = true;
+				  }
+
+					
+		              /*Create the XmlContent associated to the new resource to access and manage the structured content */
+					  CmsFile cmsFile = cmsObject.readFile(resource);
+					  CmsXmlContent content = CmsXmlContentFactory.unmarshal(cmsObject, cmsFile);
+	
+		              /*Get the locale*/
+					  Locale localizacion = cmsObject.getRequestContext().getLocale();
+					  if(localeStr!=null)
+						  localizacion = new Locale(localeStr);
+	
+					  I_CmsXmlContentValue contentValue = null;
+	
+					  /*Checks if the content at the declared index exists*/
+					  if(content.hasValue(fieldCategory, localizacion, 0) && category !=null)
+					  {
+						/*If the content exists, get the value and set it*/
+						contentValue = content.getValue(fieldCategory, localizacion, 0);
+						String categoryValue = contentValue.getStringValue(cmsObject);
+						if(categoryValue!=null && categoryValue.length()>0)
+							categoryValue = categoryValue + ","+category;
+						else
+							categoryValue = category;
+						
+	              		contentValue.setStringValue(cmsObject, categoryValue);
+					  }					 
+	              	  else 
+	              	  {
+	              		/*If the content does not exist, add it to the xml and set it */
+	              	    contentValue = content.addValue(cmsObject, fieldCategory, localizacion, 0);
+	              		contentValue.setStringValue(cmsObject, category);
+	              	  }
+	
+					  //Bloqueamos el recurso
+		              cmsObject.lockResource(resource);
+		            	
+		              //Modificamos el contenido
+		              byte[] byteContent= content.marshal();
+		              cmsFile.setContents(byteContent);
+		              cmsObject.writeFile(cmsFile);
+		                
+		              /*Ejecutamos mappings y otras acciones necesarias despues de crear el recurso, para ello lo volvemos a leer*/
+			          cmsFile = cmsObject.readFile(resource);
+			          content = CmsXmlContentFactory.unmarshal(cmsObject, cmsFile);
+		                
+		              // Comprueba que el xml este bien formado, escribe los mapeos y asigna las categorías de los campos tipo OpenCmsCategory
+		              cmsFile = content.getHandler().prepareForWrite(cmsObject, content, cmsFile);
+		                
+		              //Desbloqueamos
+		              cmsObject.unlockResource(resource);
+		              //Publicamos el recurso
+		              if(publish)
+		                	OpenCms.getPublishManager().publishResource(cmsObject, resource);
+	                
+		              cmsResource = cmsFile;
+		              if(cmsResource == null)
+		            	  success = false;
+		              else
+		            	  success = true;
+		              
+		              if(change)
+		              {
+		            	  cmsObject.getRequestContext().setCurrentProject(project);
+		              }
+				}else{
+					return false;
+				}
+
+				return success;
+			}
 
 
 
@@ -790,7 +880,6 @@ public class ResourceManager
 			{
 				  /* Check if the resource exists*/
 				  boolean exists = cmsObject.existsResource(resource);
-				  boolean success = true;
 				  boolean change = false;
 
 				  CmsResource cmsResource = null;
