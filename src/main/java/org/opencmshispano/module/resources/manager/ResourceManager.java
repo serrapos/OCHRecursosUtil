@@ -19,6 +19,7 @@ import org.opencms.file.CmsObject;
 import org.opencms.file.CmsProject;
 import org.opencms.file.CmsProperty;
 import org.opencms.file.CmsResource;
+import org.opencms.file.CmsResourceFilter;
 import org.opencms.i18n.CmsEncoder;
 import org.opencms.jsp.CmsJspActionElement;
 import org.opencms.loader.CmsLoaderException;
@@ -90,7 +91,7 @@ public class ResourceManager
 				boolean res = false;
 				try{
 					//Comprobamos primero si existe ya un fichero igual, si no existe lo creamos y si existe lo sobre escribimos
-					if(!cmsObject.existsResource(vfsPath))
+					if(!cmsObject.existsResource(vfsPath,CmsResourceFilter.ALL))
 					{
 						//Creamos el recurso
 						int typeId = OpenCms.getResourceManager().getResourceType("image").getTypeId();
@@ -134,7 +135,7 @@ public class ResourceManager
 				boolean res = false;
 				try{
 					//Comprobamos primero si existe ya un fichero igual, si no existe lo creamos y si existe lo sobre escribimos
-					if(!cmsObject.existsResource(vfsPath))
+					if(!cmsObject.existsResource(vfsPath, CmsResourceFilter.ALL))
 					{
 						//Creamos el recurso
 						int typeId = OpenCms.getResourceManager().getResourceType("binary").getTypeId();
@@ -268,8 +269,8 @@ public class ResourceManager
 			public boolean copyResource(String fuente, String destino)
 			{
 				/* Check if the resource exists*/
-				  boolean existsDestino = cmsObject.existsResource(destino);
-				  boolean existsFuente = cmsObject.existsResource(fuente);
+				  boolean existsDestino = cmsObject.existsResource(destino,CmsResourceFilter.ALL);
+				  boolean existsFuente = cmsObject.existsResource(fuente,CmsResourceFilter.ALL);
 				  boolean change = false;
 
 				  boolean resultado = false;
@@ -317,8 +318,8 @@ public class ResourceManager
 			public boolean createSibling(String fuente, String destino)
 			{
 				/* Check if the resource exists*/
-				  boolean existsDestino = cmsObject.existsResource(destino);
-				  boolean existsFuente = cmsObject.existsResource(fuente);
+				  boolean existsDestino = cmsObject.existsResource(destino,CmsResourceFilter.ALL);
+				  boolean existsFuente = cmsObject.existsResource(fuente,CmsResourceFilter.ALL);
 				  boolean success = true;
 				  boolean change = false;
 
@@ -778,7 +779,7 @@ public class ResourceManager
 			protected CmsResource createOrEditResource(String resource, int type, CmsXmlContent content, boolean publish)
 			{
 				  /* Check if the resource exists*/
-				  boolean exists = cmsObject.existsResource(resource);
+				  boolean exists = cmsObject.existsResource(resource,CmsResourceFilter.ALL);
 				  boolean change = false;
 
 				  CmsResource cmsResource = null;
@@ -879,7 +880,7 @@ public class ResourceManager
 			protected CmsResource editResource(String resource, CmsXmlContent content, boolean publish)
 			{
 				  /* Check if the resource exists*/
-				  boolean exists = cmsObject.existsResource(resource);
+				  boolean exists = cmsObject.existsResource(resource,CmsResourceFilter.ALL);
 				  boolean change = false;
 
 				  CmsResource cmsResource = null;
