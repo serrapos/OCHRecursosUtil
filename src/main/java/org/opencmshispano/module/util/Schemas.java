@@ -32,5 +32,16 @@ public class Schemas {
 			throw new UtilException("No existe el recurso con id "+type);			
 		}
 	}
+	
+	public static String getSchemaByType(String typeName) throws UtilException {
+		try {
+			I_CmsResourceType resType = OpenCms.getResourceManager().getResourceType(typeName);
+			String schema = (String) resType.getConfiguration().
+				get(CmsResourceTypeXmlContent.CONFIGURATION_SCHEMA);
+			return SCHEMA_PREFIX + schema;
+		} catch (CmsLoaderException e) {
+			throw new UtilException("No existe el recurso con id "+typeName);			
+		}
+	}
 
 }

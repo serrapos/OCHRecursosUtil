@@ -20,6 +20,7 @@ import org.opencms.file.CmsProject;
 import org.opencms.file.CmsProperty;
 import org.opencms.file.CmsResource;
 import org.opencms.file.CmsResourceFilter;
+import org.opencms.file.types.I_CmsResourceType;
 import org.opencms.i18n.CmsEncoder;
 import org.opencms.jsp.CmsJspActionElement;
 import org.opencms.loader.CmsLoaderException;
@@ -40,8 +41,8 @@ import org.opencmshispano.module.util.Schemas;
 
 /**
  * Revision 1.1: Añadido constructor para poder enviar un CmsObject distinto al del CmsJspActionElement para poder
- * disponer de permisos especiales de administraci�n.
- * @author OpenCms Hispano : Alejandro Alves Calderon | Sergio Raposo Vargas * *  
+ * disponer de permisos especiales de administracion.
+ * @author OpenCms Hispano : Alejandro Alves Calderon | Sergio Raposo Vargas 
  * @version 1.1
  *
  */
@@ -123,7 +124,7 @@ public class ResourceManager
 			}
 			
 			/**
-			 * Sube una imagen a OpenCms a la carpeta indicada
+			 * Sube un fichero binario a OpenCms a la carpeta indicada
 			 * @param image
 			 * @param title
 			 * @param vfsPath
@@ -266,6 +267,12 @@ public class ResourceManager
 	            return attachmentMap;
 			}
 
+			/**
+			 * Copia un recurso de una ruta a otra
+			 * @param fuente
+			 * @param destino
+			 * @return
+			 */
 			public boolean copyResource(String fuente, String destino)
 			{
 				/* Check if the resource exists*/
@@ -315,6 +322,12 @@ public class ResourceManager
 	              return resultado;
 			}
 
+			/**
+			 * Crea un sibling de un recurso
+			 * @param fuente
+			 * @param destino
+			 * @return
+			 */
 			public boolean createSibling(String fuente, String destino)
 			{
 				/* Check if the resource exists*/
@@ -362,11 +375,13 @@ public class ResourceManager
 			}
 
 			/**
+			 * Deprecado en version 1.2. Alternativa: saveCmsResource
 			 * This method creates a new resource or edits an existing one, and sets it's content according to the info passed by the HashMap data.
 			 * @param data - Data associated to the resource's content
 			 * @param resource - Resources path+name
 			 * @param type - The resource's type
 			 */
+			@Deprecated 			
 			public boolean saveResource (HashMap data, String resource, int type, boolean publish)
 			{
 				if(saveCmsResource (data, resource, type, publish, null) == null)
@@ -376,17 +391,37 @@ public class ResourceManager
 			}
 			
 			/**
+			 * Deprecado en version 1.2. Alternativa: saveCmsResource
 			 * This method creates a new resource or edits an existing one, and sets it's content according to the info passed by the HashMap data.
 			 * @param data - Data associated to the resource's content
 			 * @param resource - Resources path+name
 			 * @param type - The resource's type
 			 */
+			@Deprecated 
 			public boolean saveResource (HashMap data, String resource, int type, boolean publish, String customLocale)
 			{
 				if(saveCmsResource (data, resource, type, publish, customLocale) == null)
 					return false;
 				else
 					return true;
+			}
+			
+			public CmsResource saveCmsResource (HashMap data, String resource, String resourceTypeName, boolean publish){
+				return saveCmsResource (data, resource, resourceTypeName, publish, null);
+			}
+			
+			public CmsResource saveCmsResource (HashMap data, String resource, String resourceTypeName){
+				return saveCmsResource (data, resource, resourceTypeName, false, null);
+			}
+			
+			public CmsResource saveCmsResource (HashMap data, String resource, int type, boolean publish, String customLocale){
+				try {
+					I_CmsResourceType resType = OpenCms.getResourceManager().getResourceType(type);
+					return saveCmsResource (data, resource, resType.getTypeName(), publish, customLocale);
+				} catch (CmsLoaderException e) {
+					e.printStackTrace();
+				}
+				return null;
 			}
 
 			/**
@@ -395,7 +430,7 @@ public class ResourceManager
 			 * @param resource - Resources path+name
 			 * @param type - The resource's type
 			 */
-			public CmsResource saveCmsResource (HashMap data, String resource, int type, boolean publish, String customLocale)
+			public CmsResource saveCmsResource (HashMap data, String resource, String type, boolean publish, String customLocale)
 			{
 				boolean success=true;
 				CmsResource cmsResource=null;
@@ -470,7 +505,7 @@ public class ResourceManager
 			 * @param resource - Resources path+name
 			 * @param type - The resource's type
 			 */
-			public CmsXmlContent generaXmlContent (HashMap data, CmsXmlContent content, Locale localizacion)
+			private CmsXmlContent generaXmlContent (HashMap data, CmsXmlContent content, Locale localizacion)
 			{
 				try{
 					Element el = content.getLocaleNode(localizacion);
@@ -529,11 +564,13 @@ public class ResourceManager
 			}
 
 			/**
+			 * Deprecado en version 1.2: usar saveCmsResource
 			 * This method edits any fields a resource existing one, and sets it's content according to the info passed by the HashMap data.
 			 * @param data - Data associated to the resource's content
 			 * @param resource - Resources path+name
 			 * @param type - The resource's type
 			 */
+			@Deprecated
 			public boolean editResource (HashMap data, String resource, int type, boolean publish)
 			{
 				CmsResource cmsResource=null;
@@ -584,7 +621,13 @@ public class ResourceManager
 		              }
 
 		              /*If everything went well, the resource will be edited or created*/
-		              cmsResource = createOrEditResource(resource, type, content, publish);
+		              try {
+							I_CmsResourceType resType = OpenCms.getResourceManager().getResourceType(type);
+							cmsResource = createOrEditResource(resource, resType.getTypeName(), content, publish);
+						} catch (CmsLoaderException e) {
+							e.printStackTrace();
+						}
+		              
 		              if(cmsResource == null)
 		            	  success = false;
 		              else
@@ -601,16 +644,26 @@ public class ResourceManager
 			}
 
 			/**
+			 * Deprecado en version 1.2: usar saveCmsResource
 			 * This method edits any fields a resource existing one, and sets it's content according to the info passed by the HashMap data.
 			 * @param data - Data associated to the resource's content
 			 * @param resource - Resources path+name
 			 * @param type - The resource's type
 			 */
+			@Deprecated
 			public boolean editResource (HashMap data, String resource)
 			{
 				return editResource(data, resource, true);
 			}
 			
+			/**
+			 * Deprecado en version 1.2: usar saveCmsResource
+			 * @param data
+			 * @param resource
+			 * @param publish
+			 * @return
+			 */
+			@Deprecated
 			public boolean editResource (HashMap data, String resource, boolean publish)
 			{
 				CmsResource cmsResource=null;
@@ -677,7 +730,16 @@ public class ResourceManager
 		          return success;
 			}
 			
-			
+			/**
+			 * Añade una categoria a un recurso
+			 * @param resource
+			 * @param category
+			 * @param fieldCategory
+			 * @param localeStr
+			 * @param publish
+			 * @return
+			 * @throws Exception
+			 */
 			public boolean addCategory(String resource, String category, String fieldCategory, String localeStr, Boolean publish) throws Exception{
 				CmsResource cmsResource=null;
 				boolean success=true;
@@ -776,7 +838,7 @@ public class ResourceManager
 			 * @param content - CmsXmlContent associated to the resource
 			 * @return
 			 */
-			protected CmsResource createOrEditResource(String resource, int type, CmsXmlContent content, boolean publish)
+			protected CmsResource createOrEditResource(String resource, String typeName, CmsXmlContent content, boolean publish)
 			{
 				  /* Check if the resource exists*/
 				  boolean exists = cmsObject.existsResource(resource,CmsResourceFilter.ALL);
@@ -835,13 +897,18 @@ public class ResourceManager
 		              else //The resource does not exist
 		              {
 			            	 /*Create the resource and set the content*/
-			            	 cmsResource = cmsObject.createResource(resource, type, byteContent, new ArrayList());
+		            	  	 cmsResource = cmsObject.createResource(resource, OpenCms.getResourceManager().getResourceType(typeName), byteContent, new ArrayList());
+			            	 
+		            	  	 //Metodo deprecado
+		            	  	 //cmsResource = cmsObject.createResource(resource, typeName, byteContent, new ArrayList());
 			            	 
 			            	 /*Ejecutamos mappings y otras acciones necesarias despues de crear el recurso, para ello lo volvemos a leer*/
 				             CmsFile cmsFile = cmsObject.readFile(resource);
 				             content = CmsXmlContentFactory.unmarshal(cmsObject, cmsFile);
 				             
+				             // Comprueba que el xml este bien formado, escribe los mapeos y asigna las categorías de los campos tipo OpenCmsCategory
 				             cmsFile = content.getHandler().prepareForWrite(cmsObject, content, cmsFile);
+				             
 			                 cmsObject.unlockResource(resource);
 				              /*
 				               * CmsObject.publishResource it's deprecated for OpenCms 7 use this instead
