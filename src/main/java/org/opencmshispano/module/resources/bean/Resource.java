@@ -60,4 +60,12 @@ public class Resource {
     public void setFields(List<Field> fields) {
         this.fields = fields;
     }
+
+	@Override
+	public String toString() {
+		return "Resource [title=" + title + ", path=" + path
+				+ ", resourceType=" + resourceType + ", fields=" + fields + "]";
+	}
+    
+    
 }

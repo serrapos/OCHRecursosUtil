@@ -1,11 +1,26 @@
 apply plugin: 'java'
+apply plugin: 'maven'
 jar.archiveName = "recursosutil-1.2.jar"
 version = '1.2'
+group = 'org.opencmshispano'
+
 
 repositories {
 	mavenCentral()
+	mavenLocal()
 }
 
 dependencies {
 	compile group: 'org.opencms', name: 'opencms-core', version: '9.5.1'
+	compile 'com.fasterxml.jackson.core:jackson-core:2.4.1'
+	compile 'com.fasterxml.jackson.core:jackson-databind:2.4.1'
+	compile 'com.fasterxml.jackson.core:jackson-annotations:2.4.1'
+}
+
+uploadArchives {
+	repositories {
+	   mavenDeployer {
+		  repository url: 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
+	  }
+	}
 }

@@ -1,32 +1,86 @@
 package org.opencmshispano.module.resources.manager;
 
-import org.opencmshispano.module.resources.bean.Field;
-import org.opencmshispano.module.resources.bean.Resource;
-import org.opencms.db.CmsPublishList;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+
 import org.opencms.file.CmsObject;
 import org.opencms.file.CmsResource;
 import org.opencms.jsp.CmsJspActionElement;
 import org.opencms.main.CmsException;
 import org.opencms.main.OpenCms;
-import org.opencmshispano.module.resources.manager.ResourceManager;
+import org.opencmshispano.module.resources.bean.Field;
+import org.opencmshispano.module.resources.bean.Resource;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ResourceJsonManager {
 
     private CmsObject cmsObject;
-    private CmsJspActionElement cms;
     private ResourceManager rm;
 
-    public ResourceJsonManager(CmsJspActionElement cms, CmsObject cmsObject) {
+    public ResourceJsonManager(CmsObject cmsObject) {
         this.cmsObject = cmsObject;
-        this.cms = cms;
-        rm = new ResourceManager(cms);
+        rm = new ResourceManager(cmsObject);
+    }
+    
+    /**
+     * Método que recibe un String con el json correctamente formateado (ver ejemplos) y crea los recursos en OpenCms. 
+     * Según el parametro publish se publicarán o no los recursos creados / editados
+     * @param json
+     * @param publish
+     * @return
+     */
+    public List<CmsResource> updateResourcesByJson(String json, boolean publish){
+    	//Mapeamos el json obtenido a un Map
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+			ArrayList<Resource> jsonData = mapper.readValue(json.getBytes(), new TypeReference<List<Resource>>(){});
+			return updateResources(jsonData,publish);
+		} catch (JsonParseException e) {
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();			
+		}
+        return null;
+    }
+    
+    /**
+     * Método que recibe un JsonNode correctamente formateado (ver ejemplos) y crea los recursos en OpenCms. 
+     * Según el parametro publish se publicarán o no los recursos creados / editados
+     * @param json
+     * @param publish
+     * @return
+     */
+    public List<CmsResource> updateResources(JsonNode node, boolean publish){
+
+        List<CmsResource> recursosOpenCms = new ArrayList<CmsResource>();
+        
+        if(node.isArray()){
+        	List<Resource> resouces = getListResources(node);
+        	updateResources(resouces,publish);
+        }
+        
+        return recursosOpenCms;
     }
 
-    public void updateResources(List<Resource> recursos, boolean publish){
+
+    /**
+     * Método que recibe una lista de Resouce correctamente formateado (ver ejemplos) y crea los recursos en OpenCms. 
+     * Según el parametro publish se publicarán o no los recursos creados / editados
+     * @param json
+     * @param publish
+     * @return
+     */
+    public List<CmsResource> updateResources(List<Resource> recursos, boolean publish){
 
         List<CmsResource> recursosOpenCms = new ArrayList<CmsResource>();
         //Recorremos la lista entera y vamos creando cada uno de los recursos
@@ -35,20 +89,26 @@ public class ResourceJsonManager {
             recursosOpenCms.add(updateResource(recurso));
         }
         if(publish)
-        	publishListResource(recursosOpenCms);        
+        	publishListResource(recursosOpenCms);    
+        
+        return recursosOpenCms;
     }
 
+    /**
+     * Método que recibe un resource y lo crea / edita en OpenCms
+     * @param resource
+     * @return
+     */
     public CmsResource updateResource(Resource resource)  {
 
         try {
             //Generamos el data con el mapeo de la informacion
             HashMap data = getDataByResource(resource.getFields());
             //Obtenemos el id del recurso
-            int resourceTypeId = OpenCms.getResourceManager().getResourceType(resource.getResourceType()).getTypeId();
             //Editamos o creamos el recurso pero no publicamos. El locale lo dejamos a null
-            CmsResource cmsResource = rm.saveCmsResource(data, resource.getPath(), resourceTypeId, false, null);
+            CmsResource cmsResource = rm.saveCmsResource(data, resource.getPath(), resource.getResourceType(), false, null);
             return cmsResource;
-        }catch(CmsException ex){
+        }catch(Exception ex){
             //noop
         	System.out.println("Error al crear recurso\n ");
         	ex.printStackTrace();
@@ -59,7 +119,7 @@ public class ResourceJsonManager {
     private HashMap<?,?> getDataByResource(List<Field> fields){
         HashMap<String, Object> data = new HashMap<String, Object>();
 
-        //Recorremos todos los campos aÃ±adiendo el campo
+        //Recorremos todos los campos añadiendo el campo
         for (Field field : fields) {
             if(Field.FIELD_TYPE_SIMPLE.equals(field.getType())){
             	if(field.getValue()!=null){
@@ -99,6 +159,10 @@ public class ResourceJsonManager {
         return data;
     }
     
+    /**
+     * Publica una lista de recursos de OpenCms
+     * @param resources
+     */
     private void publishListResource(List<CmsResource> resources){
     	
     	try {
@@ -106,6 +170,54 @@ public class ResourceJsonManager {
 		} catch (CmsException e) {
 			e.printStackTrace();
 		}
+    }
+    
+    /**
+     * Obtiene a partir de un JsonNode una lista de Resource
+     * @param listNodes
+     * @return
+     */
+    private List<Resource> getListResources(JsonNode listNodes){
+    	List<Resource> resources = new ArrayList<Resource>();
+    	
+    	//Recorremos la lista de recursos
+    	Iterator it = listNodes.iterator();
+    	while(it.hasNext()){
+    		JsonNode nodeResource = (JsonNode)it.next();
+    		Resource r = new Resource();
+    		r.setTitle(nodeResource.get("title").asText());
+    		r.setPath(nodeResource.get("path").asText());
+    		r.setResourceType(nodeResource.get("title").asText());
+    		r.setFields(getListFields(nodeResource.get("fields")));
+    		resources.add(r);
+    	}
+    	
+    	return resources;
+    }
+    
+    /**
+     * Obtiene a partir de un JsonNode una lista de Field
+     * @param listNodes
+     * @return
+     */
+    private List<Field> getListFields(JsonNode listNodes){
+    	List<Field> fields = new ArrayList<Field>();
+    	
+    	//Recorremos la lista de recursos
+    	Iterator it = listNodes.iterator();
+    	while(it.hasNext()){
+    		JsonNode nodeField = (JsonNode)it.next();
+    		Field f = new Field();
+    		f.setName(nodeField.get("name").asText());
+    		f.setType(nodeField.get("type").asText());
+    		if(nodeField.hasNonNull("value") && nodeField.get("value").isTextual())
+    			f.setValue(nodeField.get("value").asText());
+    		if(nodeField.hasNonNull("fields") && nodeField.get("fields").isArray())
+    			f.setFields(getListFields(nodeField.get("fields")));    
+    		fields.add(f);
+    	}
+    	
+    	return fields;
     }
     
 }

@@ -64,4 +64,12 @@ public class Field {
     public void setFields(List<Field> nested) {
         this.fields = fields;
     }
+
+	@Override
+	public String toString() {
+		return "Field [name=" + name + ", value=" + value + ", type=" + type
+				+ ", fields=" + fields + "]";
+	}
+    
+    
 }
