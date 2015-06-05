@@ -4,6 +4,9 @@ jar.archiveName = "recursosutil-1.2.jar"
 version = '1.2'
 group = 'org.opencmshispano'
 
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
 
 repositories {
 	mavenCentral()
