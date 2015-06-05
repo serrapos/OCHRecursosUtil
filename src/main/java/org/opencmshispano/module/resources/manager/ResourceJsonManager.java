@@ -31,8 +31,8 @@ public class ResourceJsonManager {
     }
     
     /**
-     * Método que recibe un String con el json correctamente formateado (ver ejemplos) y crea los recursos en OpenCms. 
-     * Según el parametro publish se publicarán o no los recursos creados / editados
+     * Metodo que recibe un String con el json correctamente formateado (ver ejemplos) y crea los recursos en OpenCms. 
+     * Segun el parametro publish se publicarï¿½n o no los recursos creados / editados
      * @param json
      * @param publish
      * @return
@@ -54,8 +54,8 @@ public class ResourceJsonManager {
     }
     
     /**
-     * Método que recibe un JsonNode correctamente formateado (ver ejemplos) y crea los recursos en OpenCms. 
-     * Según el parametro publish se publicarán o no los recursos creados / editados
+     * Metodo que recibe un JsonNode correctamente formateado (ver ejemplos) y crea los recursos en OpenCms. 
+     * Segun el parametro publish se publicarï¿½n o no los recursos creados / editados
      * @param json
      * @param publish
      * @return
@@ -74,8 +74,8 @@ public class ResourceJsonManager {
 
 
     /**
-     * Método que recibe una lista de Resouce correctamente formateado (ver ejemplos) y crea los recursos en OpenCms. 
-     * Según el parametro publish se publicarán o no los recursos creados / editados
+     * Metodo que recibe una lista de Resouce correctamente formateado (ver ejemplos) y crea los recursos en OpenCms. 
+     * Segun el parametro publish se publicaran o no los recursos creados / editados
      * @param json
      * @param publish
      * @return
@@ -95,7 +95,7 @@ public class ResourceJsonManager {
     }
 
     /**
-     * Método que recibe un resource y lo crea / edita en OpenCms
+     * Metodo que recibe un resource y lo crea / edita en OpenCms
      * @param resource
      * @return
      */
@@ -119,7 +119,7 @@ public class ResourceJsonManager {
     private HashMap<?,?> getDataByResource(List<Field> fields){
         HashMap<String, Object> data = new HashMap<String, Object>();
 
-        //Recorremos todos los campos añadiendo el campo
+        //Recorremos todos los campos aï¿½adiendo el campo
         for (Field field : fields) {
             if(Field.FIELD_TYPE_SIMPLE.equals(field.getType())){
             	if(field.getValue()!=null){
@@ -148,9 +148,11 @@ public class ResourceJsonManager {
                 }
             }else if(Field.FIELD_TYPE_MULTIPLE_CHOICE.equals(field.getType())) {
                 List<HashMap> fieldsAux = new ArrayList<HashMap>();
-                if(field.getFields()!=null){
+                if(field.getFields()!=null && field.getFields().size()>0){
 	                for (Field f : field.getFields()) {
-	                    fieldsAux.add(getDataByResource(f.getFields()));
+	                	HashMap aux = new HashMap();
+	                	aux.put(f.getName(), getDataByResource(f.getFields()));
+	                	fieldsAux.add(aux);
 	                }
 	                data.put(field.getName(), fieldsAux);
                 }
@@ -187,7 +189,7 @@ public class ResourceJsonManager {
     		Resource r = new Resource();
     		r.setTitle(nodeResource.get("title").asText());
     		r.setPath(nodeResource.get("path").asText());
-    		r.setResourceType(nodeResource.get("title").asText());
+    		r.setResourceType(nodeResource.get("resourceType").asText());
     		r.setFields(getListFields(nodeResource.get("fields")));
     		resources.add(r);
     	}

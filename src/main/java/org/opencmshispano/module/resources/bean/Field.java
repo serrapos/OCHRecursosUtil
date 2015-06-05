@@ -61,7 +61,7 @@ public class Field {
         return fields;
     }
 
-    public void setFields(List<Field> nested) {
+    public void setFields(List<Field> fields) {
         this.fields = fields;
     }
 
