@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,6 +37,7 @@ import org.opencms.xml.CmsXmlException;
 import org.opencms.xml.content.CmsXmlContent;
 import org.opencms.xml.content.CmsXmlContentFactory;
 import org.opencms.xml.types.I_CmsXmlContentValue;
+import org.opencmshispano.module.resources.bean.Choice;
 import org.opencmshispano.module.util.Schemas;
 
 
@@ -475,6 +477,9 @@ public class ResourceManager
 		                  else if (value instanceof HashMap)
 		                  {
 				              manageNestedContent((HashMap) value, key, localizacion, content);
+				          }else if (value instanceof Choice)
+		                  {
+				        	  manageChoiceContent(((Choice)value).getSubfields(), key, localizacion, content);
 				          }
 		                  else
 		                  {
@@ -1049,6 +1054,70 @@ public class ResourceManager
                        }
                  }
 			}
+			
+			/**
+			 * This auxiliary method manages the choice elemnts
+			 *
+			 * @param listaValores - List that contains all the values associated to one field
+			 * @param key - Field's name
+			 * @param localizacion - Locale
+			 * @param content - XML content
+			 */
+			protected void manageChoiceContent(List<HashMap> listaValores, String key, Locale localizacion, CmsXmlContent content)
+			{
+				
+				if(listaValores!=null && listaValores.size()>0)
+				{
+	                int i=0;
+	                I_CmsXmlContentValue contentValue = null, contentValueInterno = null;
+	
+	                //Borramos todos los elementos previamente de la lista multiple.
+	                if(content.hasValue(key, localizacion))
+					{
+						//Si existen elementos los borramos previamente.
+						contentValue = content.getValue(key, localizacion);
+						int numElementos = contentValue.getMaxIndex();
+						for (int j=numElementos-1;j>0;j--)
+						{
+							content.removeValue(key, localizacion, j);
+						}
+					}
+	                
+	                //Una vez borrado todos los valores, anadimos uno vacio
+	                contentValue = content.addValue(cmsObject, key, localizacion, i);
+	                
+	                /*Path to the node*/
+	                String xPath = contentValue.getPath() + "/";
+	                
+	                int cont = 0;
+	                
+	                //Map iteration
+	                for(HashMap c: listaValores)
+	                {                	
+	                	
+	                	//El hashmap solo tendra un valor, pero aun asi lo recorremos
+	                	Iterator it = c.keySet().iterator();                	
+	                	while(it.hasNext())
+	                	{
+	                		String key2 = (String)it.next();
+	                		Object valor2 = c.get(key2);
+	                		
+	                		if(valor2 instanceof ArrayList){
+	                       	 	manageMultipleContent((ArrayList)valor2, xPath+key2, localizacion, content);
+	                        }else if (valor2 instanceof HashMap){
+	                       	 	manageNestedContent((HashMap) valor2, xPath+key2, localizacion, content, cont);
+	                        }else if(valor2 instanceof Choice){
+	                        	manageChoiceContent(((Choice)valor2).getSubfields(), xPath+key2, localizacion, content);
+	                        }else if(valor2 instanceof String){
+	   			        	 	manageSimpleContent(xPath+key2, (String)valor2, localizacion, content, cont);
+	                        }else{
+	                        	//noop
+	                        }
+	                	}
+	                	cont++;
+	                }
+				}
+			}
 
 
 			/**
@@ -1103,11 +1172,14 @@ public class ResourceManager
 	                   * String = Simple content
 	                   */
 
-                     if(valor2 instanceof ArrayList)
+                     if(valor2 instanceof ArrayList){
                     	 manageMultipleContent((ArrayList)valor2, xPath+key2, localizacion, content);
-                     else if (valor2 instanceof HashMap)
+                     }else if (valor2 instanceof HashMap){
                     	 manageNestedContent((HashMap) valor2, xPath+key2, localizacion, content);
-			         else
+                     }else if(valor2 instanceof Choice)
+                     {
+                     	manageChoiceContent(((Choice)valor2).getSubfields(), xPath+key, localizacion, content);
+                     }else
                      {
 			        	 manageSimpleContent(xPath+key2, (String)valor2, localizacion, content);
                      }

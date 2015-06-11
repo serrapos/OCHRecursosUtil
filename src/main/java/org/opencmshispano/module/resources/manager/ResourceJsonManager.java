@@ -8,9 +8,9 @@ import java.util.List;
 
 import org.opencms.file.CmsObject;
 import org.opencms.file.CmsResource;
-import org.opencms.jsp.CmsJspActionElement;
 import org.opencms.main.CmsException;
 import org.opencms.main.OpenCms;
+import org.opencmshispano.module.resources.bean.Choice;
 import org.opencmshispano.module.resources.bean.Field;
 import org.opencmshispano.module.resources.bean.Resource;
 
@@ -147,15 +147,18 @@ public class ResourceJsonManager {
 	                data.put(field.getName(), fieldsAux);
                 }
             }else if(Field.FIELD_TYPE_MULTIPLE_CHOICE.equals(field.getType())) {
-                List<HashMap> fieldsAux = new ArrayList<HashMap>();
+            	Choice dataChoice = new Choice(field.getName());
+            	ArrayList fieldsAux = new ArrayList();
                 if(field.getFields()!=null && field.getFields().size()>0){
 	                for (Field f : field.getFields()) {
-	                	HashMap aux = new HashMap();
-	                	aux.put(f.getName(), getDataByResource(f.getFields()));
-	                	fieldsAux.add(aux);
+	                	//Creamos hashmap para el campo principal del choice
+	                	HashMap dataAux = new HashMap();
+	                	dataAux.put(f.getName(), getDataByResource(f.getFields()));
+	                	fieldsAux.add(dataAux);
 	                }
-	                data.put(field.getName(), fieldsAux);
                 }
+                dataChoice.setSubfields(fieldsAux);
+                data.put(field.getName(), dataChoice);
             }
         }
         return data;
