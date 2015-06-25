@@ -439,18 +439,27 @@ public class ResourceManager
 
 				try
 		        {
-					  /*get the schema*/
-					  String schema = Schemas.getSchemaByType(type);					  
-		              /*Create the XmlContent associated to the new resource to access and manage the structured content */
-
-					  /*Get the locale*/
-					  Locale localizacion = cmsObject.getRequestContext().getLocale();
-					  if(customLocale!=null)
-						  localizacion = new Locale(customLocale);
-					  
-					  CmsXmlContentDefinition def = CmsXmlContentDefinition.unmarshal(schema,new CmsXmlEntityResolver(cmsObject));
-		              CmsXmlContent content = CmsXmlContentFactory.createDocument(cmsObject, localizacion, CmsEncoder.ENCODING_UTF_8,def);
-
+					
+					 boolean exists = cmsObject.existsResource(resource,CmsResourceFilter.ALL);
+					 CmsXmlContent content = null;
+					 /*Get the locale*/
+					 Locale localizacion = cmsObject.getRequestContext().getLocale();
+					 if(customLocale!=null)
+						 localizacion = new Locale(customLocale);	
+					 
+					 //Comprobamos si existe para crear un content nuevo o leer el recurso actual
+					 if(exists){
+						 /*Create the XmlContent associated to the new resource to access and manage the structured content */
+						 CmsFile cmsFile = cmsObject.readFile(resource);
+						 content = CmsXmlContentFactory.unmarshal(cmsObject, cmsFile);						 
+					 }else{
+						  /*get the schema*/
+						  String schema = Schemas.getSchemaByType(type);					  
+			              /*Create the XmlContent associated to the new resource to access and manage the structured content */	
+						  CmsXmlContentDefinition def = CmsXmlContentDefinition.unmarshal(schema,new CmsXmlEntityResolver(cmsObject));
+			              content = CmsXmlContentFactory.createDocument(cmsObject, localizacion, CmsEncoder.ENCODING_UTF_8,def);
+					 }
+					 
 
 		              /*Go through the MAP's list with all the data.*/
 		              Set keys = data.keySet();
