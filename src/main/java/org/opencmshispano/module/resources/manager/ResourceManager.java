@@ -1019,43 +1019,45 @@ public class ResourceManager
 			 */
 			protected void manageMultipleContent(List listaValores, String key, Locale localizacion, CmsXmlContent content)
 			{
-                int i=0;
-                I_CmsXmlContentValue contentValue = null, contentValueInterno = null;
-
-                //Borramos todos los elementos previamente de la lista multiple.
-                if(content.hasValue(key, localizacion))
-				{
-					//Si existen elementos los borramos previamente.
-					contentValue = content.getValue(key, localizacion);
-					int numElementos = contentValue.getMaxIndex();
-					for (int j=numElementos-1;j>0;j--)
+				if(listaValores!=null && listaValores.size()>0){
+	                int i=0;
+	                I_CmsXmlContentValue contentValue = null, contentValueInterno = null;
+	
+	                //Borramos todos los elementos previamente de la lista multiple.
+	                if(content.hasValue(key, localizacion))
 					{
-						content.removeValue(key, localizacion, j);
+						//Si existen elementos los borramos previamente.
+						contentValue = content.getValue(key, localizacion);
+						int numElementos = contentValue.getMaxIndex();
+						for (int j=numElementos-1;j>0;j--)
+						{
+							content.removeValue(key, localizacion, j);
+						}
 					}
+	
+	                //Check if the first element is nested content.
+	                if(listaValores.get(0) instanceof HashMap)
+	                {
+	                	   //Map iteration
+	                       Iterator itList = listaValores.iterator();
+	                       while (itList.hasNext())
+	                       {
+	                    	   HashMap map2 = (HashMap)itList.next();
+	                    	   /*manage simple nested content*/
+	                    	   manageNestedContent (map2, key, localizacion, content, i);
+	                           i++;
+	                       }
+	                }
+	                else //The content is simple
+	                {
+	                	   //Go through the list and insert the values.
+	                       while (i<listaValores.size())
+	                       {
+	                    	 manageSimpleContent(key,(String)listaValores.get(i), localizacion, content, i);
+	                         i++;
+	                       }
+	                 }
 				}
-
-                //Check if the first element is nested content.
-                if(listaValores.get(0) instanceof HashMap)
-                {
-                	   //Map iteration
-                       Iterator itList = listaValores.iterator();
-                       while (itList.hasNext())
-                       {
-                    	   HashMap map2 = (HashMap)itList.next();
-                    	   /*manage simple nested content*/
-                    	   manageNestedContent (map2, key, localizacion, content, i);
-                           i++;
-                       }
-                }
-                else //The content is simple
-                {
-                	   //Go through the list and insert the values.
-                       while (i<listaValores.size())
-                       {
-                    	 manageSimpleContent(key,(String)listaValores.get(i), localizacion, content, i);
-                         i++;
-                       }
-                 }
 			}
 			
 			/**
