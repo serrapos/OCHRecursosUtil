@@ -1,35 +1,15 @@
 package org.opencmshispano.module.resources.manager;
 
-/*Java util imports*/
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.logging.Log;
 import org.dom4j.Element;
-import org.opencms.file.CmsFile;
-import org.opencms.file.CmsObject;
-import org.opencms.file.CmsProject;
-import org.opencms.file.CmsProperty;
-import org.opencms.file.CmsResource;
-import org.opencms.file.CmsResourceFilter;
+import org.opencms.file.*;
 import org.opencms.file.types.I_CmsResourceType;
 import org.opencms.i18n.CmsEncoder;
 import org.opencms.jsp.CmsJspActionElement;
 import org.opencms.loader.CmsLoaderException;
-import org.opencms.main.CmsException;
-import org.opencms.main.CmsIllegalArgumentException;
-import org.opencms.main.CmsLog;
-import org.opencms.main.CmsRuntimeException;
-import org.opencms.main.OpenCms;
+import org.opencms.main.*;
 import org.opencms.util.CmsRequestUtil;
 import org.opencms.xml.CmsXmlContentDefinition;
 import org.opencms.xml.CmsXmlEntityResolver;
@@ -39,6 +19,10 @@ import org.opencms.xml.content.CmsXmlContentFactory;
 import org.opencms.xml.types.I_CmsXmlContentValue;
 import org.opencmshispano.module.resources.bean.Choice;
 import org.opencmshispano.module.util.Schemas;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.UnsupportedEncodingException;
+import java.util.*;
 
 
 /**
@@ -60,7 +44,7 @@ public class ResourceManager
 
 			private static final Log LOG = CmsLog.getLog(ResourceManager.class);
 			/**
-			 *@param CmsJspActionElement
+			 *@param cms
 			 *
 			 */
 			public ResourceManager(CmsJspActionElement cms)
@@ -510,8 +494,8 @@ public class ResourceManager
 			/**
 			 * This method creates a new resource or edits an existing one, and sets it's content according to the info passed by the HashMap data.
 			 * @param data - Data associated to the resource's content
-			 * @param resource - Resources path+name
-			 * @param type - The resource's type
+			 * @param content - Resources path+name
+			 * @param localizacion - The resource's type
 			 */
 			private CmsXmlContent generaXmlContent (HashMap data, CmsXmlContent content, Locale localizacion)
 			{
@@ -656,7 +640,6 @@ public class ResourceManager
 			 * This method edits any fields a resource existing one, and sets it's content according to the info passed by the HashMap data.
 			 * @param data - Data associated to the resource's content
 			 * @param resource - Resources path+name
-			 * @param type - The resource's type
 			 */
 			@Deprecated
 			public boolean editResource (HashMap data, String resource)
@@ -842,7 +825,7 @@ public class ResourceManager
 			/**
 			 * This method creates or edits a CmsResource.
 			 * @param resource - resource's path + name
-			 * @param type - Resorce type's id
+			 * @param typeName - Resorce type's id
 			 * @param content - CmsXmlContent associated to the resource
 			 * @return
 			 */
@@ -905,7 +888,7 @@ public class ResourceManager
 		              else //The resource does not exist
 		              {
 			            	 /*Create the resource and set the content*/
-		            	  	 cmsResource = cmsObject.createResource(resource, OpenCms.getResourceManager().getResourceType(typeName), byteContent, new ArrayList());
+		            	  	 cmsResource = cmsObject.createResource(resource, OpenCms.getResourceManager().getResourceType(typeName).getTypeId(), byteContent, new ArrayList());
 			            	 
 		            	  	 //Metodo deprecado
 		            	  	 //cmsResource = cmsObject.createResource(resource, typeName, byteContent, new ArrayList());
@@ -943,7 +926,6 @@ public class ResourceManager
 			/**
 			 * This method creates or edits a CmsResource.
 			 * @param resource - resource's path + name
-			 * @param type - Resorce type's id
 			 * @param content - CmsXmlContent associated to the resource
 			 * @return
 			 */
