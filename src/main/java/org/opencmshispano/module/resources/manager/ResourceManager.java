@@ -453,11 +453,11 @@ public class ResourceManager
 						 CmsFile cmsFile = cmsObject.readFile(resource);
 						 content = CmsXmlContentFactory.unmarshal(cmsObject, cmsFile);						 
 					 }else{
-						  /*get the schema*/
-						  String schema = Schemas.getSchemaByType(type);					  
-			              /*Create the XmlContent associated to the new resource to access and manage the structured content */	
-						  CmsXmlContentDefinition def = CmsXmlContentDefinition.unmarshal(schema,new CmsXmlEntityResolver(cmsObject));
-			              content = CmsXmlContentFactory.createDocument(cmsObject, localizacion, CmsEncoder.ENCODING_UTF_8,def);
+						 /*get the schema*/
+						 String schema = Schemas.getSchemaByType(type);					  
+						 /*Create the XmlContent associated to the new resource to access and manage the structured content */	
+						 CmsXmlContentDefinition def = CmsXmlContentDefinition.unmarshal(schema,new CmsXmlEntityResolver(cmsObject));
+						 content = CmsXmlContentFactory.createDocument(cmsObject, localizacion, CmsEncoder.ENCODING_UTF_8,def);
 					 }
 					 
 
@@ -479,19 +479,13 @@ public class ResourceManager
 		                   * String = Simple content
 		                   */
 
-			              if (value instanceof ArrayList)
-		                  {
+			              if (value instanceof ArrayList) {
 				              manageMultipleContent((ArrayList)value, key, localizacion,  content);
-		                  }
-		                  else if (value instanceof HashMap)
-		                  {
+		                  } else if (value instanceof HashMap) {
 				              manageNestedContent((HashMap) value, key, localizacion, content);
-				          }else if (value instanceof Choice)
-		                  {
+				          } else if (value instanceof Choice) {
 				        	  manageChoiceContent(((Choice)value).getSubfields(), key, localizacion, content);
-				          }
-		                  else
-		                  {
+				          } else {
 				              manageSimpleContent(key, (String)value, localizacion, content);
 				          }
 		              }
@@ -1083,23 +1077,35 @@ public class ResourceManager
 	                //Borramos todos los elementos previamente de la lista multiple.
 	                if(content.hasValue(key, localizacion))
 					{
-						//Si existen elementos los borramos previamente.
-						contentValue = content.getValue(key, localizacion);
-						int numElementos = contentValue.getMaxIndex();
-						for (int j=numElementos-1;j>0;j--)
+	                	
+	                	if(content.hasValue(key, localizacion, i) && (listaValores==null || listaValores.size()==0))
 						{
-							content.removeValue(key, localizacion, j);
+							//Si el contenido existe y el valor es null
+	                		contentValue = content.getValue(key, localizacion);
+							int numElementos = contentValue.getMaxIndex();
+							for (int j=numElementos-1;j>=contentValue.getMinOccurs();j--)
+							{
+								content.removeValue(key, localizacion, j);
+							}
+						}else{
+							//Si existen elementos los borramos previamente.
+							contentValue = content.getValue(key, localizacion);
+							int numElementos = contentValue.getMaxIndex();
+							for (int j=numElementos-1;j>0;j--)
+							{
+								content.removeValue(key, localizacion, j);
+							}
 						}
+					}else{
+		                //Una vez borrado todos los valores, anadimos uno vacio
+		                contentValue = content.addValue(cmsObject, key, localizacion, i);
 					}
 	                
-	                //Una vez borrado todos los valores, anadimos uno vacio
-	                contentValue = content.addValue(cmsObject, key, localizacion, i);
 	                
 	                /*Path to the node*/
 	                String xPath = contentValue.getPath() + "/";
 	                
-	                int cont = 0;
-	                
+	                int cont = 0;	                
 	                //Map iteration
 	                for(HashMap c: listaValores)
 	                {                	
@@ -1114,7 +1120,7 @@ public class ResourceManager
 	                		if(valor2 instanceof ArrayList){
 	                       	 	manageMultipleContent((ArrayList)valor2, xPath+key2, localizacion, content);
 	                        }else if (valor2 instanceof HashMap){
-	                       	 	manageNestedContent((HashMap) valor2, xPath+key2, localizacion, content, cont);
+	                       	 	manageNestedContent((HashMap) valor2, xPath+key2, localizacion, content,cont);
 	                        }else if(valor2 instanceof Choice){
 	                        	manageChoiceContent(((Choice)valor2).getSubfields(), xPath+key2, localizacion, content);
 	                        }else if(valor2 instanceof String){
@@ -1157,7 +1163,7 @@ public class ResourceManager
 	        	 if(!content.hasValue(key, localizacion, i))
 	        	 {
 	        		 /*If it does not have it, it has to be created*/
-                     contentValue = content.addValue(cmsObject, key, localizacion, i);
+                     contentValue = content.addValue(cmsObject, key, localizacion,i);
 	        	 }
                  else
                  {

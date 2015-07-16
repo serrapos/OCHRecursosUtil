@@ -84,9 +84,12 @@ public class ResourceJsonManager {
 
         List<CmsResource> recursosOpenCms = new ArrayList<CmsResource>();
         //Recorremos la lista entera y vamos creando cada uno de los recursos
+        int i=1;
         for (Resource recurso : recursos) {
+        	System.out.println(i+"-> Actualizando recurso: "+recurso);
             //Actualizamos cada uno de los recursos
             recursosOpenCms.add(updateResource(recurso));
+            i++;
         }
         if(publish)
         	publishListResource(recursosOpenCms);    
