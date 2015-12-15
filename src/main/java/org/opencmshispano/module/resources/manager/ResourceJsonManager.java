@@ -10,6 +10,7 @@ import org.opencms.file.CmsObject;
 import org.opencms.file.CmsResource;
 import org.opencms.main.CmsException;
 import org.opencms.main.OpenCms;
+import org.opencms.util.CmsStringUtil;
 import org.opencmshispano.module.resources.bean.Choice;
 import org.opencmshispano.module.resources.bean.Field;
 import org.opencmshispano.module.resources.bean.Resource;
@@ -109,7 +110,12 @@ public class ResourceJsonManager {
             HashMap data = getDataByResource(resource.getFields());
             //Obtenemos el id del recurso
             //Editamos o creamos el recurso pero no publicamos. El locale lo dejamos a null
-            CmsResource cmsResource = rm.saveCmsResource(data, resource.getPath(), resource.getResourceType(), false, null);
+            CmsResource cmsResource;
+            if ((resource.getLocale() != null) && (!resource.getLocale().equals(""))) {
+            	cmsResource = rm.saveCmsResource(data, resource.getPath(), resource.getResourceType(), false, resource.getLocale());
+            } else {
+            	cmsResource = rm.saveCmsResource(data, resource.getPath(), resource.getResourceType(), false, null);
+            }
             return cmsResource;
         }catch(Exception ex){
             //noop

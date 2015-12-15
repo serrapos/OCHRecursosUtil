@@ -1,6 +1,7 @@
 package org.opencmshispano.module.resources.bean;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by sraposo on 07/05/2015.
@@ -8,6 +9,7 @@ import java.util.List;
  */
 public class Resource {
 
+	private String locale;
     private String title;
     private String path;
     private String resourceType;
@@ -65,6 +67,14 @@ public class Resource {
 	public String toString() {
 		return "Resource [title=" + title + ", path=" + path
 				+ ", resourceType=" + resourceType + ", fields=" + fields + "]";
+	}
+
+	public String getLocale() {
+		return locale;
+	}
+
+	public void setLocale(String locale) {
+		this.locale = locale;
 	}
     
     

@@ -1,7 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'maven'
-jar.archiveName = "recursosutil-1.5.jar"
-version = '1.5'
+jar.archiveName = "recursosutil-1.6.jar"
+version = '1.6'
 group = 'org.opencmshispano'
 
 sourceCompatibility = 1.6

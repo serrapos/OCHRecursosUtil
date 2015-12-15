@@ -451,7 +451,13 @@ public class ResourceManager
 					 if(exists){
 						 /*Create the XmlContent associated to the new resource to access and manage the structured content */
 						 CmsFile cmsFile = cmsObject.readFile(resource);
-						 content = CmsXmlContentFactory.unmarshal(cmsObject, cmsFile);						 
+						 content = CmsXmlContentFactory.unmarshal(cmsObject, cmsFile);
+						 List<Locale> localesActuales = content.getLocales();
+						 if(!localesActuales.contains(localizacion)){
+							 //Si no tenemos el locale solicitado creado, copiamos de uno existente
+							 content.copyLocale(localesActuales.get(0), localizacion);
+						 }
+						 
 					 }else{
 						 /*get the schema*/
 						 String schema = Schemas.getSchemaByType(type);					  
