@@ -1,25 +1,23 @@
 package org.opencmshispano.module.resources.manager;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-
-import org.opencms.file.CmsObject;
-import org.opencms.file.CmsResource;
-import org.opencms.main.CmsException;
-import org.opencms.main.OpenCms;
-import org.opencms.util.CmsStringUtil;
-import org.opencmshispano.module.resources.bean.Choice;
-import org.opencmshispano.module.resources.bean.Field;
-import org.opencmshispano.module.resources.bean.Resource;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.opencms.file.CmsObject;
+import org.opencms.file.CmsResource;
+import org.opencms.main.CmsException;
+import org.opencms.main.OpenCms;
+import org.opencmshispano.module.resources.bean.Choice;
+import org.opencmshispano.module.resources.bean.Field;
+import org.opencmshispano.module.resources.bean.Resource;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 public class ResourceJsonManager {
 

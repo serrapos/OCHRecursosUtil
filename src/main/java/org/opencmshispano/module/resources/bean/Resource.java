@@ -1,7 +1,8 @@
 package org.opencmshispano.module.resources.bean;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 
 /**
  * Created by sraposo on 07/05/2015.
@@ -29,6 +30,21 @@ public class Resource {
         this.path = path;
         this.resourceType = resourceType;
         this.fields = fields;
+    }
+    
+    public Resource(Map data) {
+    	this.title = (String)data.get("title");
+        this.path = (String)data.get("path");
+        this.resourceType = (String)data.get("resourceType");
+        if(data.containsKey("locale"))
+        	this.locale = (String)data.get("locale");        
+        if(data.containsKey("fields") && data.get("fields")!=null){
+        	 this.fields = new ArrayList<Field>();
+        	List<Map> fieldsData = (List)data.get("fields");
+        	for(Map dataField:fieldsData){
+        		fields.add(new Field(dataField));
+        	}
+        }
     }
 
     public String getTitle() {

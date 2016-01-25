@@ -1,7 +1,8 @@
 package org.opencmshispano.module.util;
 
 
-import java.util.*;
+import java.util.Locale;
+import java.util.ResourceBundle;
  
 public class Bundle
 {

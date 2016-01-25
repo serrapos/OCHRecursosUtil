@@ -1,7 +1,5 @@
 package org.opencmshispano.module.resources.manager;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.logging.Log;
 import org.opencms.file.CmsObject;
 import org.opencms.file.CmsProperty;
