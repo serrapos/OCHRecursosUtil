@@ -436,6 +436,7 @@ public class ResourceManager
 					 if(exists){
 						 /*Create the XmlContent associated to the new resource to access and manage the structured content */
 						 CmsFile cmsFile = cmsObject.readFile(resource);
+						 cmsResource = (CmsResource)cmsFile;
 						 content = CmsXmlContentFactory.unmarshal(cmsObject, cmsFile);
 						 List<Locale> localesActuales = content.getLocales();
 						 if(!localesActuales.contains(localizacion)){
@@ -456,6 +457,9 @@ public class ResourceManager
 		              Set keys = data.keySet();
 		              Iterator itKeys = keys.iterator();
 
+					  //Creamos una variable para comprobar si realmente se ha editado el recurso o no
+					  boolean modified = false;
+
 		              while (itKeys.hasNext())
 		              {
 		            	  //The key is a field's name
@@ -471,23 +475,25 @@ public class ResourceManager
 		                   */
 
 			              if (value instanceof ArrayList) {
-				              manageMultipleContent((ArrayList)value, key, localizacion,  content);
+				              modified = manageMultipleContent((ArrayList)value, key, localizacion,  content) || modified;
 		                  } else if (value instanceof HashMap) {
-				              manageNestedContent((HashMap) value, key, localizacion, content);
+							  modified = manageNestedContent((HashMap) value, key, localizacion, content) || modified;
 				          } else if (value instanceof Choice) {
-				        	  manageChoiceContent(((Choice)value).getSubfields(), key, localizacion, content);
+							  modified = manageChoiceContent(((Choice)value).getSubfields(), key, localizacion, content) || modified;
 				          } else {
-				              manageSimpleContent(key, (String)value, localizacion, content);
+							  modified = manageSimpleContent(key, (String)value, localizacion, content) || modified;
 				          }
 		              }
 
-		              
-		              cmsResource = createOrEditResource(resource, type, content, publish);
-		              if(cmsResource == null)
-		            	  success = false;
-		              else
-		            	  success = true;
-
+		              if(modified) {
+						  cmsResource = createOrEditResource(resource, type, content, publish);
+						  if (cmsResource == null)
+							  success = false;
+						  else
+							  success = true;
+					  }else{
+						  success = true;
+					  }
 		          }
 		          catch(Exception exc)
 		          {
@@ -1008,47 +1014,110 @@ public class ResourceManager
 			 * @param localizacion - Locale
 			 * @param content - XML content
 			 */
-			protected void manageMultipleContent(List listaValores, String key, Locale localizacion, CmsXmlContent content)
+			protected boolean manageMultipleContent(List listaValores, String key, Locale localizacion, CmsXmlContent content)
 			{
+				boolean modified = false;
 				if(listaValores!=null && listaValores.size()>0){
 	                int i=0;
 	                I_CmsXmlContentValue contentValue = null, contentValueInterno = null;
-	
+
 	                //Borramos todos los elementos previamente de la lista multiple.
 	                if(content.hasValue(key, localizacion))
 					{
 						//Si existen elementos los borramos previamente.
 						contentValue = content.getValue(key, localizacion);
 						int numElementos = contentValue.getMaxIndex();
-						for (int j=numElementos-1;j>0;j--)
-						{
-							content.removeValue(key, localizacion, j);
-						}
-					}
-	
-	                //Check if the first element is nested content.
-	                if(listaValores.get(0) instanceof HashMap)
-	                {
-	                	   //Map iteration
-	                       Iterator itList = listaValores.iterator();
-	                       while (itList.hasNext())
-	                       {
-	                    	   HashMap map2 = (HashMap)itList.next();
+
+
+						//Tenemos 2 posibles casos:
+						// 1- Mismo numero de campos, por lo que los recorremos y los editamos.
+						// 2- Numero distinto, por lo que borramos y volvemos a editar todo
+
+						if(listaValores.size()==numElementos){
+							//actualizamos uno a uno viendo si hay cambios
+
+							//Check if the first element is nested content.
+							if(listaValores.get(0) instanceof HashMap)
+							{
+								//Map iteration
+								Iterator itList = listaValores.iterator();
+								while (itList.hasNext())
+								{
+									HashMap map2 = (HashMap)itList.next();
+	                    	   		/*manage simple nested content*/
+									modified = manageNestedContent (map2, key, localizacion, content, i) || modified;
+									i++;
+								}
+							}
+							else //The content is simple
+							{
+								//Go through the list and insert the values.
+								while (i<listaValores.size())
+								{
+									modified = manageSimpleContent(key,(String)listaValores.get(i), localizacion, content, i) || modified;
+									i++;
+								}
+							}
+
+						}else{
+							//Borramos todos para volverlos a crear
+
+							for (int j=numElementos-1;j>0;j--)
+							{
+								content.removeValue(key, localizacion, j);
+							}
+
+							//Check if the first element is nested content.
+							if(listaValores.get(0) instanceof HashMap)
+							{
+								//Map iteration
+								Iterator itList = listaValores.iterator();
+								while (itList.hasNext())
+								{
+									HashMap map2 = (HashMap)itList.next();
 	                    	   /*manage simple nested content*/
-	                    	   manageNestedContent (map2, key, localizacion, content, i);
-	                           i++;
-	                       }
-	                }
-	                else //The content is simple
-	                {
-	                	   //Go through the list and insert the values.
-	                       while (i<listaValores.size())
-	                       {
-	                    	 manageSimpleContent(key,(String)listaValores.get(i), localizacion, content, i);
-	                         i++;
-	                       }
-	                 }
+									manageNestedContent (map2, key, localizacion, content, i);
+									i++;
+								}
+							}
+							else //The content is simple
+							{
+								//Go through the list and insert the values.
+								while (i<listaValores.size())
+								{
+									manageSimpleContent(key,(String)listaValores.get(i), localizacion, content, i);
+									i++;
+								}
+							}
+							modified = true;
+						}
+					}else{
+						//Check if the first element is nested content.
+						if(listaValores.get(0) instanceof HashMap)
+						{
+							//Map iteration
+							Iterator itList = listaValores.iterator();
+							while (itList.hasNext())
+							{
+								HashMap map2 = (HashMap)itList.next();
+	                    	   /*manage simple nested content*/
+								manageNestedContent (map2, key, localizacion, content, i);
+								i++;
+							}
+						}
+						else //The content is simple
+						{
+							//Go through the list and insert the values.
+							while (i<listaValores.size())
+							{
+								manageSimpleContent(key,(String)listaValores.get(i), localizacion, content, i);
+								i++;
+							}
+						}
+						modified = true;
+					}
 				}
+				return modified;
 			}
 			
 			/**
@@ -1059,72 +1128,169 @@ public class ResourceManager
 			 * @param localizacion - Locale
 			 * @param content - XML content
 			 */
-			protected void manageChoiceContent(List<HashMap> listaValores, String key, Locale localizacion, CmsXmlContent content)
+			protected boolean manageChoiceContent(List<HashMap> listaValores, String key, Locale localizacion, CmsXmlContent content)
 			{
-				
+				boolean modified = false;
 				if(listaValores!=null && listaValores.size()>0)
 				{
+					//Si se han definido valores nuevos, miramos primero si tiene valores anteriormente y si tiene, si el numero de elementos es el mismo
+					//en el caso que no sea el mismo valor, borramos todo y volvemos a crear, si son el mismo numero, editamos los actuales
 	                int i=0;
 	                I_CmsXmlContentValue contentValue = null, contentValueInterno = null;
+
+					boolean borrarYCrear = false;
 	
-	                //Borramos todos los elementos previamente de la lista multiple.
+	                //Miramos si hay valores actualmente
 	                if(content.hasValue(key, localizacion))
 					{
-	                	
-	                	if(content.hasValue(key, localizacion, i) && (listaValores==null || listaValores.size()==0))
-						{
-							//Si el contenido existe y el valor es null
-	                		contentValue = content.getValue(key, localizacion);
-							int numElementos = contentValue.getMaxIndex();
-							for (int j=numElementos-1;j>=contentValue.getMinOccurs();j--)
-							{
-								content.removeValue(key, localizacion, j);
+	                	//Si hay valores, miramos primero si el numero de elementos es igual o no a los valores nuevos
+						contentValue = content.getValue(key, localizacion);
+						int numElementos = contentValue.getMaxIndex();
+						if(numElementos == listaValores.size()){
+							//Si el numero de elementos es el mismo, ahora tenemos que ver que sean del mismo tipo todos ellos
+							int contFields = 1;
+							for(HashMap c: listaValores){
+								for(Object fieldName: c.keySet()){
+									String fieldNameAux = key+"["+contFields+"]";
+									List<I_CmsXmlContentValue> subValues = content.getSubValues(fieldNameAux,localizacion);
+									if(subValues.size()>0 && !(""+fieldName).equals(subValues.get(0).getName())){
+										//Si alguno de los campos del choice no es del mismo tipo, tenemos que borrar y crear todo de nuevo
+										borrarYCrear = true;
+									}
+								}
+								contFields++;
 							}
 						}else{
-							//Si existen elementos los borramos previamente.
-							contentValue = content.getValue(key, localizacion);
-							int numElementos = contentValue.getMaxIndex();
-							for (int j=numElementos-1;j>0;j--)
-							{
+							borrarYCrear = true;
+						}
+
+
+						if(borrarYCrear) {
+							//Borramos y volvemos a crear
+							for (int j = numElementos - 1; j >= 0; j--) {
 								content.removeValue(key, localizacion, j);
+							}
+
+							int cont = 0;
+							//Map iteration
+							for (HashMap c : listaValores) {
+								//Añadimos el elemento principal antes de añadir los hijos
+								contentValue = content.addValue(cmsObject, key, localizacion, cont);
+
+								/*Path to the node*/
+								String xPath = contentValue.getPath() + "/";
+								//String xPath = key+"["+(cont+1)+"]" + "/";
+
+
+								//El hashmap solo tendra un valor, pero aun asi lo recorremos
+								Iterator it = c.keySet().iterator();
+								while (it.hasNext()) {
+									String key2 = (String) it.next();
+									Object valor2 = c.get(key2);
+
+									if (valor2 instanceof ArrayList) {
+										manageMultipleContent((ArrayList) valor2, xPath + key2, localizacion, content);
+									} else if (valor2 instanceof HashMap) {
+										manageNestedContent((HashMap) valor2, xPath + key2, localizacion, content, 0);
+									} else if (valor2 instanceof Choice) {
+										manageChoiceContent(((Choice) valor2).getSubfields(), xPath + key2, localizacion, content);
+									} else if (valor2 instanceof String) {
+										manageSimpleContent(xPath + key2, (String) valor2, localizacion, content, 0);
+									} else {
+										//noop
+									}
+								}
+								cont++;
+							}
+							//Se han realizado cambios:
+							modified = true;
+						}else{
+							//Editamos los ya existentes
+
+							/*Path to the node*/
+							//String xPath = contentValue.getPath() + "/";
+
+							int cont = 0;
+							//Map iteration
+							for(HashMap c: listaValores)
+							{
+								String xPath = key+"["+(cont+1)+"]" + "/";
+
+								//El hashmap solo tendra un valor, pero aun asi lo recorremos
+								Iterator it = c.keySet().iterator();
+								while(it.hasNext())
+								{
+									String key2 = (String)it.next();
+									Object valor2 = c.get(key2);
+
+									if(valor2 instanceof ArrayList){
+										modified = manageMultipleContent((ArrayList) valor2, xPath + key2, localizacion, content) || modified;
+									}else if (valor2 instanceof HashMap){
+										modified =  manageNestedContent((HashMap) valor2, xPath+key2, localizacion, content,0) || modified;
+									}else if(valor2 instanceof Choice){
+										modified =  manageChoiceContent(((Choice)valor2).getSubfields(), xPath+key2, localizacion, content) || modified;
+									}else if(valor2 instanceof String){
+										modified =  manageSimpleContent(xPath+key2, (String)valor2, localizacion, content, 0) || modified;
+									}else{
+										//noop
+									}
+								}
+								cont++;
 							}
 						}
 					}else{
-		                //Una vez borrado todos los valores, anadimos uno vacio
-		                contentValue = content.addValue(cmsObject, key, localizacion, i);
+						//No existen valores actualmente, tenemos que crearlos todos
+						int cont = 0;
+						//Map iteration
+						for(HashMap c: listaValores)
+						{
+							//Añadimos el elemento principal antes de añadir los hijos
+							contentValue = content.addValue(cmsObject, key, localizacion,cont);
+
+								/*Path to the node*/
+							String xPath = contentValue.getPath() + "/";
+							//String xPath = key+"["+(cont+1)+"]" + "/";
+
+
+							//El hashmap solo tendra un valor, pero aun asi lo recorremos
+							Iterator it = c.keySet().iterator();
+							while(it.hasNext())
+							{
+								String key2 = (String)it.next();
+								Object valor2 = c.get(key2);
+
+								if(valor2 instanceof ArrayList){
+									manageMultipleContent((ArrayList) valor2, xPath + key2, localizacion, content);
+								}else if (valor2 instanceof HashMap){
+									manageNestedContent((HashMap) valor2, xPath+key2, localizacion, content,0);
+								}else if(valor2 instanceof Choice){
+									manageChoiceContent(((Choice)valor2).getSubfields(), xPath+key2, localizacion, content);
+								}else if(valor2 instanceof String){
+									manageSimpleContent(xPath+key2, (String)valor2, localizacion, content, 0);
+								}else{
+									//noop
+								}
+							}
+							cont++;
+						}
+						//Como se han creado campos nuevos, marcamos que se han producido cambios
+						modified = true;
 					}
-	                
-	                
-	                /*Path to the node*/
-	                String xPath = contentValue.getPath() + "/";
-	                
-	                int cont = 0;	                
-	                //Map iteration
-	                for(HashMap c: listaValores)
-	                {                	
-	                	
-	                	//El hashmap solo tendra un valor, pero aun asi lo recorremos
-	                	Iterator it = c.keySet().iterator();                	
-	                	while(it.hasNext())
-	                	{
-	                		String key2 = (String)it.next();
-	                		Object valor2 = c.get(key2);
-	                		
-	                		if(valor2 instanceof ArrayList){
-	                       	 	manageMultipleContent((ArrayList)valor2, xPath+key2, localizacion, content);
-	                        }else if (valor2 instanceof HashMap){
-	                       	 	manageNestedContent((HashMap) valor2, xPath+key2, localizacion, content,cont);
-	                        }else if(valor2 instanceof Choice){
-	                        	manageChoiceContent(((Choice)valor2).getSubfields(), xPath+key2, localizacion, content);
-	                        }else if(valor2 instanceof String){
-	   			        	 	manageSimpleContent(xPath+key2, (String)valor2, localizacion, content, cont);
-	                        }else{
-	                        	//noop
-	                        }
-	                	}
-	                	cont++;
-	                }
+				}else{
+					//Tenemos que borrar el valor actual del campo
+					if(content.hasValue(key, localizacion, 0))
+					{
+						//Si el contenido existe y el valor es null
+						I_CmsXmlContentValue contentValue = content.getValue(key, localizacion);
+						int numElementos = contentValue.getMaxIndex();
+						for (int j=numElementos-1;j>=contentValue.getMinOccurs();j--)
+						{
+							content.removeValue(key, localizacion, j);
+						}
+					}
+					modified = true;
 				}
+				return modified;
 			}
 
 
@@ -1135,10 +1301,10 @@ public class ResourceManager
 			 * @param localizacion - locale
 			 * @param content - Xml content
 			 */
-			private void manageNestedContent (HashMap map2, String key, Locale localizacion, CmsXmlContent content)
+			private boolean manageNestedContent (HashMap map2, String key, Locale localizacion, CmsXmlContent content)
 			{
 				/* calls the method which manages the set up on a determined index*/
-				manageNestedContent (map2, key, localizacion, content, 0);
+				return manageNestedContent (map2, key, localizacion, content, 0);
 			}
 
 			/**
@@ -1149,14 +1315,17 @@ public class ResourceManager
 			 * @param content - Xml content
 			 * @param i - index
 			 */
-			private void manageNestedContent (HashMap map2, String key, Locale localizacion, CmsXmlContent content, int i)
+			private boolean manageNestedContent (HashMap map2, String key, Locale localizacion, CmsXmlContent content, int i)
 			{
+				 boolean modified = false;
+
 				 I_CmsXmlContentValue contentValueInterno = null, contentValue = null;
 				 /*Checks if the nested content has that value*/
 	        	 if(!content.hasValue(key, localizacion, i))
 	        	 {
 	        		 /*If it does not have it, it has to be created*/
                      contentValue = content.addValue(cmsObject, key, localizacion,i);
+					 modified = true;
 	        	 }
                  else
                  {
@@ -1181,17 +1350,18 @@ public class ResourceManager
 	                   */
 
                      if(valor2 instanceof ArrayList){
-                    	 manageMultipleContent((ArrayList)valor2, xPath+key2, localizacion, content);
+						 modified = manageMultipleContent((ArrayList)valor2, xPath+key2, localizacion, content) || modified;
                      }else if (valor2 instanceof HashMap){
-                    	 manageNestedContent((HashMap) valor2, xPath+key2, localizacion, content);
+						 modified =  manageNestedContent((HashMap) valor2, xPath+key2, localizacion, content) || modified;
                      }else if(valor2 instanceof Choice)
                      {
-                     	manageChoiceContent(((Choice)valor2).getSubfields(), xPath+key, localizacion, content);
+						 modified = manageChoiceContent(((Choice)valor2).getSubfields(), xPath+key, localizacion, content) || modified;
                      }else
                      {
-			        	 manageSimpleContent(xPath+key2, (String)valor2, localizacion, content);
+						 modified = manageSimpleContent(xPath+key2, (String)valor2, localizacion, content) || modified;
                      }
              	}
+				return modified;
 	        }
 
 			/**
@@ -1201,10 +1371,10 @@ public class ResourceManager
 			 * @param localizacion - locale
 			 * @param content - XML content
 			 */
-			private void manageSimpleContent(String key, String valor, Locale localizacion, CmsXmlContent content)
+			private boolean manageSimpleContent(String key, String valor, Locale localizacion, CmsXmlContent content)
 			{
 				/* calls the method which manages the set up on a determined index*/
-				manageSimpleContent(key, valor, localizacion, content, 0);
+				return manageSimpleContent(key, valor, localizacion, content, 0);
 			}
 
 
@@ -1215,28 +1385,35 @@ public class ResourceManager
 			 * @param localizacion - locale
 			 * @param content - XML content
 			 */
-			private void manageSimpleContent(String key, String valor, Locale localizacion, CmsXmlContent content, int i)
+			private boolean manageSimpleContent(String key, String valor, Locale localizacion, CmsXmlContent content, int i)
 			{
 				I_CmsXmlContentValue contentValue = null;
+				boolean modified = false;
 
 				 /*Checks if the content at the declared index exists*/
 				if(content.hasValue(key, localizacion, i) && valor !=null)
                 {
 					/*If the content exists, get the value and set it*/
 					contentValue = content.getValue(key, localizacion, i);
-              		contentValue.setStringValue(cmsObject, (String)valor);
+					if(!valor.equals(contentValue.getStringValue(cmsObject))) { //Si el valor actual es diferente al nuevo, hacemos la modificacion
+						contentValue.setStringValue(cmsObject, (String) valor);
+						modified = true;
+					}
                 }
 				else if(content.hasValue(key, localizacion, i) && valor ==null)
 				{
 					//Si el contenido existe y el valor es null
-					content.removeValue(key, localizacion, i);					
+					content.removeValue(key, localizacion, i);
+					modified = true;
 				}
               	else if(valor !=null)
               	{
               		/*If the content does not exist, add it to the xml and set it */
               	    contentValue = content.addValue(cmsObject, key, localizacion, i);
               		contentValue.setStringValue(cmsObject, (String)valor);
+					modified = true;
               	}
+				return modified;
 	        }
 
 			/**
