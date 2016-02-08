@@ -1,11 +1,10 @@
 package org.opencmshispano.module.resources.manager;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.opencms.file.CmsObject;
 import org.opencms.file.CmsResource;
 import org.opencms.main.CmsException;
@@ -14,11 +13,11 @@ import org.opencmshispano.module.resources.bean.Choice;
 import org.opencmshispano.module.resources.bean.Field;
 import org.opencmshispano.module.resources.bean.Resource;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 public class ResourceJsonManager {
 
@@ -109,7 +108,12 @@ public class ResourceJsonManager {
             HashMap data = getDataByResource(resource.getFields());
             //Obtenemos el id del recurso
             //Editamos o creamos el recurso pero no publicamos. El locale lo dejamos a null
-            CmsResource cmsResource = rm.saveCmsResource(data, resource.getPath(), resource.getResourceType(), false, null);
+            CmsResource cmsResource;
+            if ((resource.getLocale() != null) && (!resource.getLocale().equals(""))) {
+            	cmsResource = rm.saveCmsResource(data, resource.getPath(), resource.getResourceType(), false, resource.getLocale());
+            } else {
+            	cmsResource = rm.saveCmsResource(data, resource.getPath(), resource.getResourceType(), false, null);
+            }
             return cmsResource;
         }catch(Exception ex){
             //noop

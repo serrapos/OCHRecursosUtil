@@ -1,13 +1,13 @@
 package org.opencmshispano.module.resources.form;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-
 import org.apache.commons.logging.Log;
 import org.opencms.main.CmsLog;
 import org.opencmshispano.module.resources.commons.Field;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 
 public class FormManager
 {
