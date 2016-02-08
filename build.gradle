@@ -7,6 +7,15 @@ group = 'org.opencmshispano'
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+}
+
+artifacts {
+	archives sourcesJar
+}
+
 
 repositories {
 	mavenCentral()
@@ -15,15 +24,21 @@ repositories {
 
 dependencies {
 	compile group: 'org.opencms', name: 'opencms-core', version: '9.5.1'
-	compile 'com.fasterxml.jackson.core:jackson-core:2.4.1'
-	compile 'com.fasterxml.jackson.core:jackson-databind:2.4.1'
-	compile 'com.fasterxml.jackson.core:jackson-annotations:2.4.1'
+	compile 'com.fasterxml.jackson.core:jackson-core:2.6.1'
+	compile 'com.fasterxml.jackson.core:jackson-databind:2.6.1'
+	compile 'com.fasterxml.jackson.core:jackson-annotations:2.6.1'
 }
 
+// Permite instalar la libreria en el repositorio nexus
 uploadArchives {
 	repositories {
-	   mavenDeployer {
-		  repository url: 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
-	  }
+		mavenDeployer {
+			repository (url: 'http://192.168.1.39:9090/nexus/content/repositories/releases') {
+				authentication(userName: "sergio", password: "sergioXX1")
+			}
+			snapshotRepository (url: 'http://192.168.1.39:9090/nexus/content/repositories/snapshots') {
+				authentication(userName: "sergio", password: "sergioXX1")
+			}
+		}
 	}
 }
