@@ -126,16 +126,16 @@ public class ResourceJsonManager {
     private HashMap<?,?> getDataByResource(List<Field> fields){
         HashMap<String, Object> data = new HashMap<String, Object>();
 
-        //Recorremos todos los campos a�adiendo el campo
+        //Recorremos todos los campos anadiendo el campo
         for (Field field : fields) {
             if(Field.FIELD_TYPE_SIMPLE.equals(field.getType())){
-            	if(field.getValue()!=null){
-            		data.put(field.getName(), field.getValue());
-            	}
+                data.put(field.getName(), field.getValue());
             }else if(Field.FIELD_TYPE_NESTED.equals(field.getType())){
             	if(field.getFields()!=null){
             		data.put(field.getName(), getDataByResource(field.getFields()));
-            	}
+            	}else{
+                    data.put(field.getName(), null);
+                }
             }else if(Field.FIELD_TYPE_MULTIPLE_SIMPLE.equals(field.getType())) {
                 List<String> fieldsAux = new ArrayList<String>();
                 if(field.getFields()!=null){
@@ -143,6 +143,8 @@ public class ResourceJsonManager {
 	                    fieldsAux.add(f.getValue());
 	                }
 	                data.put(field.getName(), fieldsAux);
+                }else{
+                    data.put(field.getName(), null);
                 }
             }
             else if(Field.FIELD_TYPE_MULTIPLE_NESTED.equals(field.getType())) {
@@ -152,6 +154,8 @@ public class ResourceJsonManager {
 	                    fieldsAux.add(getDataByResource(f.getFields()));
 	                }
 	                data.put(field.getName(), fieldsAux);
+                }else{
+                    data.put(field.getName(), null);
                 }
             }else if(Field.FIELD_TYPE_MULTIPLE_CHOICE.equals(field.getType())) {
             	Choice dataChoice = new Choice(field.getName());
@@ -176,12 +180,11 @@ public class ResourceJsonManager {
      * @param resources
      */
     private void publishListResource(List<CmsResource> resources){
-    	
-    	try {
-			OpenCms.getPublishManager().getPublishList(cmsObject, resources, true);
-		} catch (CmsException e) {
-			e.printStackTrace();
-		}
+        try {
+            OpenCms.getPublishManager().publishProject(cmsObject, null, OpenCms.getPublishManager().getPublishList(cmsObject, resources, true, true));
+        } catch (CmsException e) {
+            e.printStackTrace();
+        }
     }
     
     /**

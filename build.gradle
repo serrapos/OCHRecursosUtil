@@ -13,6 +13,9 @@ targetCompatibility = 1.7
 repositories {
 	mavenCentral()
 	mavenLocal()
+	maven {
+		url "http://192.168.1.39:9090/nexus/content/repositories/releases/"
+	}
 }
 
 dependencies {
@@ -29,3 +32,15 @@ task deployTomcat(type: Copy) {
 	into 'C:/servidores/Tomcat7/webapps/opencms953/WEB-INF/lib'
 }
 
+uploadArchives {
+	repositories {
+		mavenDeployer {
+			repository (url: 'http://192.168.1.39:9090/nexus/content/repositories/releases') {
+				authentication(userName: "sergio", password: "sergioXX1")
+			}
+			snapshotRepository (url: 'http://192.168.1.39:9090/nexus/content/repositories/snapshots') {
+				authentication(userName: "sergio", password: "sergioXX1")
+			}
+		}
+	}
+}
