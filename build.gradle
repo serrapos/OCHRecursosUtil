@@ -21,9 +21,9 @@ repositories {
 dependencies {
 	testCompile group: 'junit', name: 'junit', version: '4.11'
 	compile group: 'org.opencms', name: 'opencms-core', version: '9.5.3'
-	compile 'com.fasterxml.jackson.core:jackson-core:2.4.1'
-	compile 'com.fasterxml.jackson.core:jackson-databind:2.4.1'
-	compile 'com.fasterxml.jackson.core:jackson-annotations:2.4.1'
+	compile 'com.fasterxml.jackson.core:jackson-core:2.6.1'
+	compile 'com.fasterxml.jackson.core:jackson-databind:2.6.1'
+	compile 'com.fasterxml.jackson.core:jackson-annotations:2.6.1'
 }
 
 task deployTomcat(type: Copy) {
