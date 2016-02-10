@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'maven'
 
 
-version = '1.7'
+version = '1.7.1'
 group = 'org.opencmshispano'
 jar.archiveName = "recursosutil-"+version+".jar"
 
