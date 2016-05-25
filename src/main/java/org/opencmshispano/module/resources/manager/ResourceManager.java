@@ -1171,36 +1171,51 @@ public class ResourceManager
 								content.removeValue(key, localizacion, j);
 							}
 
-							int cont = 0;
+							//Contador por tipos
+							Map<String,Integer> contadorMap = new HashMap<String,Integer>();
+
+							//Añadimos el elemento principal antes de añadir los hijos
+							contentValue = content.addValue(cmsObject, key, localizacion, 0);
+
+							/*Path to the node*/
+							String xPath = contentValue.getPath() + "/";
+
 							//Map iteration
 							for (HashMap c : listaValores) {
-								//Añadimos el elemento principal antes de añadir los hijos
-								contentValue = content.addValue(cmsObject, key, localizacion, cont);
-
-								/*Path to the node*/
-								String xPath = contentValue.getPath() + "/";
-								//String xPath = key+"["+(cont+1)+"]" + "/";
-
 
 								//El hashmap solo tendra un valor, pero aun asi lo recorremos
 								Iterator it = c.keySet().iterator();
-								while (it.hasNext()) {
-									String key2 = (String) it.next();
+								while(it.hasNext())
+								{
+									String key2 = (String)it.next();
+									Integer currentCont = 1;
+
+									//Buscamos el siguiente contador
+									if(contadorMap.containsKey(key2)){
+										//Si existe, le sumamos uno y se lo unimos a la key
+										currentCont = contadorMap.get(key2);
+										currentCont = currentCont + 1;
+										contadorMap.put(key2,currentCont);
+									}else{
+										//Inicializamos el contador
+										contadorMap.put(key2,1);
+									}
+
+									//Obtenemos el valor y seguimos el proceso
 									Object valor2 = c.get(key2);
 
-									if (valor2 instanceof ArrayList) {
-										manageMultipleContent((ArrayList) valor2, xPath + key2, localizacion, content);
-									} else if (valor2 instanceof HashMap) {
-										manageNestedContent((HashMap) valor2, xPath + key2, localizacion, content, 0);
-									} else if (valor2 instanceof Choice) {
-										manageChoiceContent(((Choice) valor2).getSubfields(), xPath + key2, localizacion, content);
-									} else if (valor2 instanceof String) {
-										manageSimpleContent(xPath + key2, (String) valor2, localizacion, content, 0);
-									} else {
+									if(valor2 instanceof ArrayList){
+										manageMultipleContent((ArrayList) valor2, xPath + key2 + "["+currentCont+"]", localizacion, content);
+									}else if (valor2 instanceof HashMap){
+										manageNestedContent((HashMap) valor2, xPath + key2, localizacion, content,currentCont-1);
+									}else if(valor2 instanceof Choice){
+										manageChoiceContent(((Choice)valor2).getSubfields(), xPath + key2 + "["+currentCont+"]", localizacion, content);
+									}else if(valor2 instanceof String){
+										manageSimpleContent(xPath + key2, (String)valor2, localizacion, content, currentCont-1);
+									}else{
 										//noop
 									}
 								}
-								cont++;
 							}
 							//Se han realizado cambios:
 							modified = true;
@@ -1209,69 +1224,99 @@ public class ResourceManager
 
 							/*Path to the node*/
 							//String xPath = contentValue.getPath() + "/";
+							String xPath = key+"[1]" + "/";
 
-							int cont = 0;
+							//Contador por tipos
+							Map<String,Integer> contadorMap = new HashMap<String,Integer>();
+
 							//Map iteration
 							for(HashMap c: listaValores)
 							{
-								String xPath = key+"["+(cont+1)+"]" + "/";
 
 								//El hashmap solo tendra un valor, pero aun asi lo recorremos
 								Iterator it = c.keySet().iterator();
 								while(it.hasNext())
 								{
 									String key2 = (String)it.next();
+									Integer currentCont = 1;
+
+									//Buscamos el siguiente contador
+									if(contadorMap.containsKey(key2)){
+										//Si existe, le sumamos uno y se lo unimos a la key
+										currentCont = contadorMap.get(key2);
+										currentCont = currentCont + 1;
+										contadorMap.put(key2,currentCont);
+									}else{
+										//Inicializamos el contador
+										contadorMap.put(key2,1);
+									}
+
+									//Obtenemos el valor y seguimos el proceso
 									Object valor2 = c.get(key2);
 
 									if(valor2 instanceof ArrayList){
-										modified = manageMultipleContent((ArrayList) valor2, xPath + key2, localizacion, content) || modified;
+										manageMultipleContent((ArrayList) valor2, xPath + key2 + "["+currentCont+"]", localizacion, content);
 									}else if (valor2 instanceof HashMap){
-										modified =  manageNestedContent((HashMap) valor2, xPath+key2, localizacion, content,0) || modified;
+										manageNestedContent((HashMap) valor2, xPath + key2, localizacion, content,currentCont-1);
 									}else if(valor2 instanceof Choice){
-										modified =  manageChoiceContent(((Choice)valor2).getSubfields(), xPath+key2, localizacion, content) || modified;
+										manageChoiceContent(((Choice)valor2).getSubfields(), xPath + key2 + "["+currentCont+"]", localizacion, content);
 									}else if(valor2 instanceof String){
-										modified =  manageSimpleContent(xPath+key2, (String)valor2, localizacion, content, 0) || modified;
+										manageSimpleContent(xPath + key2, (String)valor2, localizacion, content, currentCont-1);
 									}else{
 										//noop
 									}
 								}
-								cont++;
 							}
 						}
 					}else{
 						//No existen valores actualmente, tenemos que crearlos todos
-						int cont = 0;
-						//Map iteration
+
+						//Añadimos el elemento principal antes de añadir los hijos
+						contentValue = content.addValue(cmsObject, key, localizacion, 0);
+
+						/*Path del campo choice*/
+						String xPath = contentValue.getPath() + "/";
+
+						//Contador por tipos
+						Map<String,Integer> contadorMap = new HashMap<String,Integer>();
+
+						//Recorremos todos los hijos del choice
 						for(HashMap c: listaValores)
 						{
-							//Añadimos el elemento principal antes de añadir los hijos
-							contentValue = content.addValue(cmsObject, key, localizacion,cont);
-
-								/*Path to the node*/
-							String xPath = contentValue.getPath() + "/";
-							//String xPath = key+"["+(cont+1)+"]" + "/";
-
 
 							//El hashmap solo tendra un valor, pero aun asi lo recorremos
 							Iterator it = c.keySet().iterator();
 							while(it.hasNext())
 							{
 								String key2 = (String)it.next();
+								Integer currentCont = 1;
+
+								//Buscamos el siguiente contador
+								if(contadorMap.containsKey(key2)){
+									//Si existe, le sumamos uno y se lo unimos a la key
+									currentCont = contadorMap.get(key2);
+									currentCont = currentCont + 1;
+									contadorMap.put(key2,currentCont);
+								}else{
+									//Inicializamos el contador
+									contadorMap.put(key2,1);
+								}
+
+								//Obtenemos el valor y seguimos el proceso
 								Object valor2 = c.get(key2);
 
 								if(valor2 instanceof ArrayList){
-									manageMultipleContent((ArrayList) valor2, xPath + key2, localizacion, content);
+									manageMultipleContent((ArrayList) valor2, xPath + key2 + "["+currentCont+"]", localizacion, content);
 								}else if (valor2 instanceof HashMap){
-									manageNestedContent((HashMap) valor2, xPath+key2, localizacion, content,0);
+									manageNestedContent((HashMap) valor2, xPath + key2, localizacion, content,currentCont-1);
 								}else if(valor2 instanceof Choice){
-									manageChoiceContent(((Choice)valor2).getSubfields(), xPath+key2, localizacion, content);
+									manageChoiceContent(((Choice)valor2).getSubfields(), xPath + key2 + "["+currentCont+"]", localizacion, content);
 								}else if(valor2 instanceof String){
-									manageSimpleContent(xPath+key2, (String)valor2, localizacion, content, 0);
+									manageSimpleContent(xPath + key2, (String)valor2, localizacion, content, currentCont-1);
 								}else{
 									//noop
 								}
 							}
-							cont++;
 						}
 						//Como se han creado campos nuevos, marcamos que se han producido cambios
 						modified = true;
@@ -1356,7 +1401,10 @@ public class ResourceManager
                      }else if(valor2 instanceof Choice)
                      {
 						 modified = manageChoiceContent(((Choice)valor2).getSubfields(), xPath+key, localizacion, content) || modified;
-                     }else
+                     }else if(valor2 instanceof Long)
+					 {
+						 modified = manageSimpleContent(xPath + key2, ((Long)valor2).toString(), localizacion, content) || modified;
+					 }else if(valor2 instanceof String)
                      {
 						 modified = manageSimpleContent(xPath+key2, (String)valor2, localizacion, content) || modified;
                      }

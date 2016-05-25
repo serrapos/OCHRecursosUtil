@@ -7,7 +7,10 @@ import org.opencmshispano.module.resources.bean.Resource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +18,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class RecursosUtilTest {
-	
+
+
 	@Test
 	public void testJsonToResource() throws IOException {
 
@@ -48,4 +52,37 @@ public class RecursosUtilTest {
 
 	}
 
+
+	@Test
+	public void testJsonRandomText() throws IOException {
+
+		String url = "http://www.randomtext.me/api/lorem/h1/10-30";
+		assertNotNull(getText(url));
+
+	}
+
+	public String getText(String wsUrl){
+		try {
+			//Lanzamos petición http al WS con los parametros indicados
+			URL url = new URL(wsUrl);
+			URLConnection uc = url.openConnection();
+			uc.connect();
+
+			//Obtenemos la respuesta y la transformamos a UTF8
+			byte[] bytes = IOUtils.toByteArray(uc.getInputStream());
+			String respuesta = new String(bytes, "UTF-8");
+
+			//Mapeamos el json obtenido a un Map
+			ObjectMapper mapper = new ObjectMapper();
+			HashMap jsonData = mapper.readValue(bytes, HashMap.class);
+
+			System.out.println(jsonData);
+
+			return ""+jsonData.get("text_out");
+
+		} catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 }
