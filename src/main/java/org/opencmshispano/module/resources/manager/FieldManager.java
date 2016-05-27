@@ -1,15 +1,5 @@
 package org.opencmshispano.module.resources.manager;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.logging.Log;
 import org.opencms.file.CmsObject;
@@ -21,6 +11,9 @@ import org.opencms.main.CmsLog;
 import org.opencms.main.OpenCms;
 import org.opencmshispano.module.resources.commons.Field;
 import org.opencmshispano.module.util.Bundle;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
 
 
 public class FieldManager

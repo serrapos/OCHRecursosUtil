@@ -1,11 +1,10 @@
 package org.opencmshispano.module.resources.manager;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.opencms.file.CmsObject;
 import org.opencms.file.CmsResource;
 import org.opencms.main.CmsException;
@@ -14,11 +13,11 @@ import org.opencmshispano.module.resources.bean.Choice;
 import org.opencmshispano.module.resources.bean.Field;
 import org.opencmshispano.module.resources.bean.Resource;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 public class ResourceJsonManager {
 
@@ -109,7 +108,12 @@ public class ResourceJsonManager {
             HashMap data = getDataByResource(resource.getFields());
             //Obtenemos el id del recurso
             //Editamos o creamos el recurso pero no publicamos. El locale lo dejamos a null
-            CmsResource cmsResource = rm.saveCmsResource(data, resource.getPath(), resource.getResourceType(), false, null);
+            CmsResource cmsResource;
+            if ((resource.getLocale() != null) && (!resource.getLocale().equals(""))) {
+            	cmsResource = rm.saveCmsResource(data, resource.getPath(), resource.getResourceType(), false, resource.getLocale());
+            } else {
+            	cmsResource = rm.saveCmsResource(data, resource.getPath(), resource.getResourceType(), false, null);
+            }
             return cmsResource;
         }catch(Exception ex){
             //noop
@@ -122,16 +126,16 @@ public class ResourceJsonManager {
     private HashMap<?,?> getDataByResource(List<Field> fields){
         HashMap<String, Object> data = new HashMap<String, Object>();
 
-        //Recorremos todos los campos a�adiendo el campo
+        //Recorremos todos los campos anadiendo el campo
         for (Field field : fields) {
             if(Field.FIELD_TYPE_SIMPLE.equals(field.getType())){
-            	if(field.getValue()!=null){
-            		data.put(field.getName(), field.getValue());
-            	}
+                data.put(field.getName(), field.getValue());
             }else if(Field.FIELD_TYPE_NESTED.equals(field.getType())){
             	if(field.getFields()!=null){
             		data.put(field.getName(), getDataByResource(field.getFields()));
-            	}
+            	}else{
+                    data.put(field.getName(), null);
+                }
             }else if(Field.FIELD_TYPE_MULTIPLE_SIMPLE.equals(field.getType())) {
                 List<String> fieldsAux = new ArrayList<String>();
                 if(field.getFields()!=null){
@@ -139,6 +143,8 @@ public class ResourceJsonManager {
 	                    fieldsAux.add(f.getValue());
 	                }
 	                data.put(field.getName(), fieldsAux);
+                }else{
+                    data.put(field.getName(), null);
                 }
             }
             else if(Field.FIELD_TYPE_MULTIPLE_NESTED.equals(field.getType())) {
@@ -148,6 +154,8 @@ public class ResourceJsonManager {
 	                    fieldsAux.add(getDataByResource(f.getFields()));
 	                }
 	                data.put(field.getName(), fieldsAux);
+                }else{
+                    data.put(field.getName(), null);
                 }
             }else if(Field.FIELD_TYPE_MULTIPLE_CHOICE.equals(field.getType())) {
             	Choice dataChoice = new Choice(field.getName());
@@ -172,12 +180,11 @@ public class ResourceJsonManager {
      * @param resources
      */
     private void publishListResource(List<CmsResource> resources){
-    	
-    	try {
-			OpenCms.getPublishManager().getPublishList(cmsObject, resources, true);
-		} catch (CmsException e) {
-			e.printStackTrace();
-		}
+        try {
+            OpenCms.getPublishManager().publishProject(cmsObject, null, OpenCms.getPublishManager().getPublishList(cmsObject, resources, true, true));
+        } catch (CmsException e) {
+            e.printStackTrace();
+        }
     }
     
     /**

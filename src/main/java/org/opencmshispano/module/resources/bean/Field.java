@@ -1,6 +1,8 @@
 package org.opencmshispano.module.resources.bean;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by sraposo on 07/05/2015.
@@ -31,6 +33,21 @@ public class Field {
         this.value = value;
         this.type = type;
         this.fields = fields;
+    }
+    
+    public Field(Map data) {
+    	
+    	this.name = (String)data.get("name");    	
+        this.value = (String)data.get("value");
+        this.type = (String)data.get("type");
+       
+        if(data.containsKey("fields") && data.get("fields")!=null){
+        	this.fields = new ArrayList<Field>();
+        	List<Map> fieldsData = (List)data.get("fields");
+        	for(Map dataField:fieldsData){
+        		fields.add(new Field(dataField));
+        	}
+        }
     }
 
     public String getName() {
